@@ -26,9 +26,7 @@
                 </section>
             </div>
             <!-- Footer -->
-            <a href="#" class="back-to-top">
-                <i class="fa fa-chevron-up"></i>
-            </a>
+            @include('templates.footer')
             @include('templates.msgbox')
         </div>
         <script type="text/javascript" src="{{ url('/js/jquery.js') }}"></script>
