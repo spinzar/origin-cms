@@ -66,7 +66,7 @@
     // create description for activity
     function make_act_desc($activity_data) {
         $desc = false;
-        $user = '<strong class="text-primary">' . _t($activity_data->user) . '</strong>';
+        $user = '<strong>' . _t($activity_data->user) . '</strong>';
 
         if ($activity_data->module == "Auth") {
             if ($activity_data->action == "Login") {
@@ -78,7 +78,7 @@
         }
         else {
             if ($activity_data->form_id) {
-                $activity_link = '<strong class="text-primary">' . _t($activity_data->module) . ': ' . _t($activity_data->form_title) . '</strong>';
+                $activity_link = '<strong>' . _t($activity_data->module) . ': ' . _t($activity_data->form_title) . '</strong>';
             }
 
             if ($activity_data->action == "Create") {

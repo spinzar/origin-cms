@@ -417,10 +417,19 @@ function beautify_list_view(table) {
 	var contact_list = ['contact_no', 'phone_no', 'phone', 'mobile', 'mobile_no'];
 	var address_list = ['address', 'full_address', 'city', 'venue'];
 	var email_list = ['email_id', 'guest_id'];
-	var label_list = ['status', 'role'];
+	var label_list = ['is_active', 'role'];
 	var label_bg = {
-		'status' : { 'Active' : 'label-success', 'Inactive' : 'label-danger', 'Vacant' : 'label-success', 'Occupied' : 'label-danger' }, 
-		'role' : { 'Administrator' : 'label-default', 'Customer' : 'label-info' }
+		'is_active' : {
+			'1' : {
+				"label": 'label-success',
+				"value": "Yes"
+			},
+			'0' : {
+				"label": 'label-danger',
+				"value": "No"
+			}
+		},
+		'role' : { 'Administrator' : 'label-default', 'System Administrator' : 'label-info' }
 	}
 
 	var table = table ? table : "table.list-view";
@@ -459,7 +468,8 @@ function beautify_list_view(table) {
 			if ($(this).attr("data-field-name")) {
 				var column_name = $(this).attr("data-field-name");
 				var column_value = $.trim($(this).html());
-				if ($.trim(column_value) != "") {
+
+				if ($.trim(column_value)) {
 					if (money_list.contains(column_name)) {
 						$(this).html('<i class="fa fa-inr"></i> ' + column_value);
 					}
@@ -473,7 +483,12 @@ function beautify_list_view(table) {
 						$(this).html('<i class="fa fa-envelope"></i> ' + column_value);
 					}
 					else if (label_list.contains(column_name)) {
-						$(this).html('<span class="label ' + label_bg[column_name][column_value] + '">' + column_value +  '</span>');
+						if (typeof label_bg[column_name][column_value] === "object") {
+							$(this).html('<span class="label ' + label_bg[column_name][column_value]["label"] + '">' + label_bg[column_name][column_value]["value"] + '</span>');
+						}
+						else {
+							$(this).html('<span class="label ' + label_bg[column_name][column_value] + '">' + column_value + '</span>');
+						}
 					}
 					else if (column_value.isDate()) {
 						$(this).html('<i class="fa fa-calendar"></i> ' + moment(column_value).format('DD-MM-YYYY'));
@@ -483,9 +498,6 @@ function beautify_list_view(table) {
 					}
 					else if (column_value.isTime()) {
 						$(this).html('<i class="fa fa-clock-o"></i> ' + column_value);
-					}
-					else if (column_value && trim(column_value).isURL()) {
-						$(this).html('<a href="' + column_value + '" target="_blank">' + column_value + '</a>');
 					}
 				}
 			}

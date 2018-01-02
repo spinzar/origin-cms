@@ -97,7 +97,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="box-body">
+                <div class="box-body form-body">
                     @if (isset($module_type) && $module_type == "Single")
                         @include($file)
                     @else
@@ -106,7 +106,7 @@
                         @else
                             @var $action = route('new.doc', $slug)
                         @endif
-                        <form method="POST" action="{{ $action }}" name="{{ snake_case($module) }}" id="{{ snake_case($module) }}" class="form-horizontal" enctype="multipart/form-data">
+                        <form method="POST" action="{{ $action }}" name="{{ snake_case($module) }}" id="{{ snake_case($module) }}" role="form" enctype="multipart/form-data">
                             {!! csrf_field() !!}
                             <input type="hidden" name="id" id="id" class="form-control" data-mandatory="no" autocomplete="off" readonly>
                             @if (view()->exists(str_replace('.', '/', $file)))

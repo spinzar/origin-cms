@@ -4,7 +4,7 @@
         <div class="row">
             <div class="col-md-12" id="email-settings">
                 <h4>
-                    <strong><i class="fa fa-at"></i> Email</strong>
+                    <strong style="margin-left: 20px;"><i class="fa fa-at"></i> Email</strong>
                 </h4>
                 <div class="row">
                     <div class="col-md-12">
@@ -21,11 +21,10 @@
                 </div>
             </div>
         </div>
-        <div class="hr-line-dashed"></div>
         <div class="row">
             <div class="col-md-12" id="sms-settings">
                 <h4>
-                    <strong><i class="fa fa-envelope"></i> SMS</strong>
+                    <strong style="margin-left: 20px;"><i class="fa fa-envelope"></i> SMS</strong>
                 </h4>
                 <div class="row">
                     <div class="col-md-12">
@@ -42,12 +41,11 @@
                 </div>
             </div>
         </div>
-        <div class="hr-line-dashed"></div>
     @endif
     <div class="row">
         <div class="col-md-12" id="home-page-settings">
             <h4>
-                <strong><i class="fa fa-home"></i> Home</strong>
+                <strong style="margin-left: 20px;"><i class="fa fa-home"></i> Home</strong>
             </h4>
             <div class="row">
                 <div class="col-md-12">
@@ -65,11 +63,10 @@
             </div>
         </div>
     </div>
-    <div class="hr-line-dashed"></div>
     <div class="row">
         <div class="col-md-12" id="list-view-settings">
             <h4>
-                <strong><i class="fa fa-list"></i> List View</strong>
+                <strong style="margin-left: 20px;"><i class="fa fa-list"></i> List View</strong>
             </h4>
             <div class="row">
                 <div class="col-md-12">

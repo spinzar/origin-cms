@@ -1,3 +1,7 @@
+.control-label {
+	font-weight: 600;
+}
+
 .default-avatar {
 	width: 45px;
 	height: 45px;
@@ -143,7 +147,7 @@ a.back-to-top:hover {
 .module-label, .module-label a {
 	font-size: 15px;
 	margin-top: 0px;
-	font-weight: 700;
+	font-weight: 600;
 	margin-bottom: 10px;
 	color: #676a6c;
 	text-decoration: none;
@@ -183,6 +187,7 @@ a.back-to-top:hover {
 
 .list-header th {
 	vertical-align: middle !important;
+	font-weight: 600;
 }
 
 .list-checkbox {
@@ -204,6 +209,10 @@ a.back-to-top:hover {
 	position: relative;
 }
 
+.form-container .form-body {
+	padding: 0px;
+}
+
 .floatbox-title .form-status {
 	display: inline-block;
 	text-overflow: ellipsis;
@@ -221,6 +230,49 @@ a.back-to-top:hover {
 	padding: 0;
 	text-overflow: ellipsis;
 	float: left;
+}
+
+.form-section {
+	margin-bottom: 10px;
+	border-top: 0px;
+	border-radius: 0px;
+}
+
+.form-section:last-child {
+	margin-bottom: 0px;
+}
+
+.form-section .box-header {
+	padding: 10px 10px 10px 20px;
+}
+
+.form-section .box-title {
+	border: 0 !important;
+}
+
+.form-section .box-tools {
+	text-align: left !important;
+	margin-top: -2px !important;
+}
+
+.form-section .box-tools button {
+	margin-left: 8px !important;
+}
+
+.form-section .box-body {
+	padding-top: 0 !important;
+	border: 0 !important;
+	border-bottom: 1px solid #e7eaec !important;
+	padding: 15px 20px 0px;
+}
+
+.form-section .box-body:last-child {
+	border: 0 !important;
+}
+
+.form-section .form-content {
+	padding-left: 50px;
+	padding-right: 50px;
 }
 
 #sticky.stick {

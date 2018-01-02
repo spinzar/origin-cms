@@ -16,6 +16,6 @@ $( document ).ready(function() {
 			</div>\
 		</div>';
 
-		$(status_bar).insertAfter(".box-header");
+		$(status_bar).insertAfter($(".form-container").find(".box-header:first"));
 	}
 });

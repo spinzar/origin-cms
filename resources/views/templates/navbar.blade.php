@@ -1,7 +1,9 @@
 <header class="main-header">
     <a href="{{ route('home') }}" class="logo">
         <span class="logo-mini"><b>{{ env('BRAND_ABBR', 'OC') }}</b></span>
-        <span class="logo-lg"><b>{{ env('BRAND_NAME', 'Origin CMS') }}</b></span>
+        <span class="logo-lg">
+            <b style="font-weight: 400;">{{ env('BRAND_NAME', 'Origin CMS') }}</b>
+        </span>
     </a>
     <nav class="navbar navbar-static-top">
         <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
@@ -14,7 +16,7 @@
                         @if (auth()->user()->avatar)
                             <img alt="{{ auth()->user()->full_name }}" class="user-image" src="{{ url(auth()->user()->avatar) }}" title="{{ auth()->user()->full_name }}" />
                         @else
-                            <img alt="{{ auth()->user()->full_name }}" class="user-image" src="" title="{{ auth()->user()->full_name }}" />
+                            <img class="user-image" />
                         @endif
                         <span class="hidden-xs">{{ auth()->user()->full_name }}</span>
                     </a>

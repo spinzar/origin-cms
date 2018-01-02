@@ -68,10 +68,10 @@
                                 </td>
                                 @foreach ($columns as $column)
                                     @var $tooltip = str_replace("Id", "ID", awesome_case($column))
-                                    @if (isset($record_identifier) && ($column == $link_field || $column == $record_identifier))
+                                    @if (isset($form_title) && ($column == $link_field || $column == $form_title))
                                         <td data-field-name="{{ $column }}" class="link-field" data-toggle="tooltip" data-placement="bottom" data-container="body"
                                             title="{{ $tooltip }} : {{ $row->$column }}">
-                                            <a href="{{ route('show.doc', ['slug' => $slug, 'id' => $row->$link_field]) }}">{{ $row->$column }}</a><br />
+                                            <a href="{{ route('show.doc', ['slug' => $slug, 'id' => $row->$link_field]) }}">{{ $row->$column }}</a>
                                         </td>
                                     @else
                                         <td data-field-name="{{ $column }}" data-toggle="tooltip" data-placement="bottom" data-container="body"
