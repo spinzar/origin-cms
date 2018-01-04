@@ -1,7 +1,6 @@
 <div class="box form-section" id="module-details">
     <div class="box-header">
-        <h5 class="box-title">
-            <i class="fa fa-diamond"></i> Module Details
+        <h5 class="box-title">Module Details
             <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse">
                     <i class="fa fa-minus"></i>
@@ -119,8 +118,7 @@
 </div>
 <div class="box form-section" id="module-customization-details">
     <div class="box-header">
-        <h5 class="box-title">
-            <i class="fa fa-magic"></i> Customization
+        <h5 class="box-title">Customization
             <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse">
                     <i class="fa fa-minus"></i>
@@ -161,8 +159,7 @@
 </div>
 <div class="box form-section" id="module-configuration-details">
     <div class="box-header">
-        <h5 class="box-title">
-            <i class="fa fa-wrench"></i> Configuration
+        <h5 class="box-title">Configuration
             <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse">
                     <i class="fa fa-minus"></i>

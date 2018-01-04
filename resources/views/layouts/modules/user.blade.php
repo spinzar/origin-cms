@@ -1,7 +1,6 @@
 <div class="box form-section" id="user-details">
     <div class="box-header">
-        <h5 class="box-title">
-            <i class="fa fa-user"></i> User Details
+        <h5 class="box-title">User Details
             <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse">
                     <i class="fa fa-minus"></i>

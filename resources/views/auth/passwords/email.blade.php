@@ -14,7 +14,7 @@
             </div>
             <!-- /.login-logo -->
             <div class="login-box-body">
-                <p class="login-box-msg">Forgot Password Form</p>
+                <p class="login-box-msg">Forgot Password</p>
                 <form action="{{ route('password.email') }}" method="POST" name="password_email" id="password_email">
                     @if (Session::has('status'))
                         <div class="block">

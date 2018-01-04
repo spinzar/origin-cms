@@ -21,6 +21,7 @@
                 </div>
             </div>
         </div>
+        <hr />
         <div class="row">
             <div class="col-md-12" id="sms-settings">
                 <h4>
@@ -41,6 +42,7 @@
                 </div>
             </div>
         </div>
+        <hr />
     @endif
     <div class="row">
         <div class="col-md-12" id="home-page-settings">
@@ -63,6 +65,7 @@
             </div>
         </div>
     </div>
+    <hr />
     <div class="row">
         <div class="col-md-12" id="list-view-settings">
             <h4>

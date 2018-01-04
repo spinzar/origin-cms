@@ -22,7 +22,7 @@
                 </a>
             </div>
             <div class="login-box-body">
-                <p class="login-box-msg">Password Reset Form</p>
+                <p class="login-box-msg">Password Reset</p>
                 <form action="{{ route('post.reset.password') }}" method="POST" name="password_reset" id="password_reset">
                     @if (count($errors) > 0)
                         @foreach ($errors->all() as $error)
