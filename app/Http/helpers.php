@@ -10,7 +10,6 @@
         }
     }
 
-
     // generates a new random password
     function generate_password($length = null, $only_numbers = null) {
         if ($only_numbers) {
@@ -31,7 +30,6 @@
         return implode($pass); //turn the array into a string
     }
 
-
     // show var dump output to web
     function web_dump($var) {
         ob_start();
@@ -47,7 +45,6 @@
         exit();
     }
 
-
     // get translation text
     function _t($text) {
         $lang = auth()->user()->language;
@@ -62,41 +59,6 @@
         }
     }
 
-
-    // create description for activity
-    function make_act_desc($activity_data) {
-        $desc = false;
-        $user = '<strong>' . _t($activity_data->user) . '</strong>';
-
-        if ($activity_data->module == "Auth") {
-            if ($activity_data->action == "Login") {
-                $desc = $user . " " . _t("logged in");
-            }
-            else {
-                $desc = $user . " " . _t("logged out");
-            }
-        }
-        else {
-            if ($activity_data->form_id) {
-                $activity_link = '<strong>' . _t($activity_data->module) . ': ' . _t($activity_data->form_title) . '</strong>';
-            }
-
-            if ($activity_data->action == "Create") {
-                $desc = _t("New") . " " . $activity_link . " " . _t("created by") . " " . $user;
-            }
-            elseif ($activity_data->action == "Update") {
-                $desc = $activity_link . " " . _t("updated by") . " " . $user;
-            }
-            elseif ($activity_data->action == "Delete") {
-                $desc = '<strong>' . _t($activity_data->module) . ': ' . _t($activity_data->form_title) . '</strong>';
-                $desc .= ' ' . _t('deleted by') . ' ' . $user;
-            }
-        }
-
-        return $desc;
-    }
-
-
     // convert hours to minutes
     function h2m($hours) { 
         $minutes = 0;
@@ -108,7 +70,6 @@
 
         return $hours * 60 + $minutes;
     }
-
 
     // convert time to human readable format
     function human_readable($time) {
@@ -132,7 +93,6 @@
         return $duration;
     }
 
-
     function insert_into_object($obj, $key, $value, $after) {
         $new_object = array();
 
@@ -148,7 +108,6 @@
         return $new_object;
     }
 
-
     function validateIndianMobileNumber($mobile_no) {
         if (preg_match('/^[789]\d{9}$/', $mobile_no, $matches)) {
             return true;
@@ -158,8 +117,6 @@
         }
     }
 
-
-    // get App NAme
     function getAppName() {
         $composer = json_decode(file_get_contents(base_path().'/composer.json'), true);
 
@@ -172,6 +129,20 @@
         }
 
         throw new RuntimeException("Unable to detect application namespace.");
+    }
+
+    function spell_numbers($number) {
+        $number = (string) $number;
+        $len = strlen($number) - 1;
+        $words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        $spelling = '';
+
+        for ($x=0; $x<=$len; $x++) {
+            $spelling .= $words[$number[$x]];
+        }
+
+        $spelling = trim($spelling);
+        return $spelling;
     }
 
 ?>

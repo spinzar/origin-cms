@@ -23,7 +23,6 @@ class UserController extends Controller
         return $this->checkLoginId($request);
     }
 
-
     // put all functions to be performed after save
     public function afterSave($data)
     {
@@ -34,7 +33,6 @@ class UserController extends Controller
             $this->createUserSettings($form_data['login_id']);
         }
     }
-
 
     // check if login id is already registered
     public function checkLoginId($request)
@@ -78,7 +76,6 @@ class UserController extends Controller
         }
     }
 
-
     // verify email address of user
     public function verifyUserEmail(Request $request, $token)
     {
@@ -117,7 +114,6 @@ class UserController extends Controller
             return redirect()->route('show.app.login')->with(['msg' => $msg]);
         }
     }
-
 
     // ask user to reset password after first login
     public function processFirstLogin($user, $msg = null)

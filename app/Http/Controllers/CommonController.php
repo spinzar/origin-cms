@@ -10,6 +10,7 @@ use Cache;
 use File;
 use Mail;
 use App\Module;
+use App\Activity;
 
 trait CommonController
 {
@@ -28,7 +29,7 @@ trait CommonController
             $activity_data['status'] = 0;
             $activity_data['created_at'] = $activity_data['updated_at'] = date('Y-m-d H:i:s');
 
-            DB::table('oc_activity')->insert($activity_data);
+            Activity::insert($activity_data);
         }
     }
 
@@ -104,8 +105,8 @@ trait CommonController
             $app_modules = Cache::rememberForever('app_modules', function() {
                 $fields = [
                     'name', 'display_name', 'controller_name', 'slug', 'icon', 'icon_color', 
-                    'bg_color', 'table_name', 'form_title', 'list_view_columns', 'search_field', 
-                    'image_field', 'sort_field', 'sort_order'
+                    'bg_color', 'table_name', 'form_title', 'list_view_columns', 'image_field', 
+                    'sort_field', 'sort_order'
                 ];
 
                 $module_defaults = Module::select($fields)
@@ -214,42 +215,26 @@ trait CommonController
         return true;
     }
 
-    // send email
-    public function email($from, $to, $subject, $data, $module = null, $template = null)
+    // returns table column name and column type
+    public function getTableSchema($table, $get_nullable = false)
     {
-        $email_template_map = [
-            'User' => [
-                'from' => env('MAIL_FROM_ADDRESS'),
-                'template' => 'emails.sign_up'
-            ],
-        ];
+        $columns = DB::connection()
+            ->getDoctrineSchemaManager()
+            ->listTableColumns($table);
 
-        if (!$from && $module) {
-            $from = $email_template_map[$module]['from'];
-        }
+        $table_schema = [];
 
-        if (!$subject && $module) {
-            if ($module == "User") {
-                $subject = "Sign Up successful";
+        foreach($columns as $column) {
+            if ($get_nullable) {
+                $table_schema[$column->getName()] = [
+                    'datatype' => $column->getType()->getName(), 
+                    'nullable' => !$column->getNotnull()
+                ];
+            } else {
+                $table_schema[$column->getName()] = $column->getType()->getName();
             }
         }
 
-        if ($module) {
-            if (!$template) {
-                $template = $email_template_map[$module]['template'];
-            }
-        }
-
-        $mail_config = (object) array(
-            'from' => $from ? $from : "akhileshdarjee@gmail.com",
-            'to' => $to,
-            'subject' => $subject
-        );
-
-        Mail::send($template, array('data' => $data), function ($message) use ($mail_config) {
-            $message->from($mail_config->from, env('MAIL_FROM_NAME'));
-            $message->to($mail_config->to);
-            $message->subject($mail_config->subject);
-        });
+        return $table_schema;
     }
 }

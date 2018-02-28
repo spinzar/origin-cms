@@ -7,12 +7,13 @@
 @section('data')
     <script type="text/javascript">
         window.origin = {
-            data: <?php echo isset($form_data) ? json_encode($form_data) : "false" ?>,
+            data: <?php echo isset($form_data) ? json_encode($form_data) : json_encode(false) ?>,
             title: "{{ $title }}",
             slug: "{{ $slug }}",
             module: "{{ $module }}",
             changed: false,
-            table_name: "{{ $table_name }}"
+            table_name: "{{ $table_name }}",
+            permissions: <?php echo isset($permissions) ? json_encode($permissions) : json_encode(false) ?>
         };
     </script>
 @endsection
@@ -52,7 +53,7 @@
                                 <i class="{{ $icon }}"></i> {{ isset($form_data[$table_name]['id']) ? $form_data[$table_name][$form_title] : "New $title" }}
                             @endif
 
-                            @if (isset($form_data[$table_name]['id']))
+                            @if (isset($form_data[$table_name]['id']) && $permissions['update'])
                                 <div class="form-status non-printable">
                                     <small>
                                         <span class="text-center" id="form-stats">
@@ -66,31 +67,39 @@
                     </div>
                     <div class="box-tools non-printable">
                         <ul class="no-margin pull-right">
-                            <button type="submit" class="btn btn-success disabled" id="save_form">
-                                {{ _t('Save') }}
-                            </button>
-                            @if (isset($form_data[$table_name]['id']))
+                            @if ((isset($module_type) && $module_type == "Single") || $permissions['update'])
+                                <button type="submit" class="btn btn-success disabled" id="save_form" disabled>
+                                    <span class="hidden-xs">Save</span>
+                                    <span class="visible-xs"><i class="fa fa-floppy-o"></i></span>
+                                </button>
+                            @endif
+                            @if (isset($form_data[$table_name]['id']) && ($permissions['create'] || $permissions['delete']))
                                 <div class="btn-group">
                                     <button data-toggle="dropdown" class="btn btn-primary dropdown-toggle">
                                         Menu <span class="caret"></span>
                                     </button>
                                     <ul class="dropdown-menu dropdown-left">
-                                        <li>
-                                            <a href="{{ route('copy.doc', ['slug' => $slug, 'id' => $form_data[$table_name][$link_field]]) }}">
-                                                Duplicate
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="#" id="delete" name="delete">
-                                                Delete
-                                            </a>
-                                        </li>
-                                        <li class="divider"></li>
-                                        <li>
-                                            <a href="{{ route('new.doc', $slug) }}">
-                                                New {{ $title }}
-                                            </a>
-                                        </li>
+                                        @if ($permissions['create'])
+                                            <li>
+                                                <a href="{{ route('copy.doc', ['slug' => $slug, 'id' => $form_data[$table_name][$link_field]]) }}">
+                                                    Duplicate
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if ($permissions['delete'])
+                                            <li>
+                                                <a href="#" id="delete" name="delete">
+                                                    Delete
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if ($permissions['create'])
+                                            <li>
+                                                <a href="{{ route('new.doc', $slug) }}">
+                                                    New {{ $title }}
+                                                </a>
+                                            </li>
+                                        @endif
                                     </ul>
                                 </div>
                             @endif
@@ -106,7 +115,7 @@
                         @else
                             @var $action = route('new.doc', $slug)
                         @endif
-                        <form method="POST" action="{{ $action }}" name="{{ snake_case($module) }}" id="{{ snake_case($module) }}" role="form" enctype="multipart/form-data">
+                        <form method="POST" action="{{ $action }}" name="{{ $slug }}" id="{{ $slug }}" enctype="multipart/form-data">
                             {!! csrf_field() !!}
                             <input type="hidden" name="id" id="id" class="form-control" data-mandatory="no" autocomplete="off" readonly>
                             @if (view()->exists(str_replace('.', '/', $file)))

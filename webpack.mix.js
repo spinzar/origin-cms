@@ -32,7 +32,6 @@ mix.scripts([
     'public/js/bootstrap.min.js',
     'public/plugins/slimScroll/jquery.slimscroll.min.js',
     'public/plugins/toastr/toastr.min.js',
-    'public/js/bootstrap-typeahead.js',
     'public/js/moment.js',
     'public/plugins/datepicker/bootstrap-datepicker.js',
     'public/js/bootstrap-datetimepicker.js',

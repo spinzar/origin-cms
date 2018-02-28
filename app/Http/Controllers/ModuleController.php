@@ -25,26 +25,21 @@ class ModuleController extends Controller
     public function show()
     {
         $user_role = auth()->user()->role;
+        $modules = $this->getAppModules();
 
-        if ($user_role == 'System Administrator') {
-            $modules = $this->getAppModules();
-        } else {
+        if ($user_role != 'System Administrator') {
             $role_modules = $this->roleWiseModules($user_role, "Read");
-            $app_modules = Cache::get('app_modules');
-            $modules = [];
 
-            foreach ($app_modules as $module_name => $config) {
-                if (in_array($module_name, $role_modules)) {
-                    $modules[$module_name] = $config;
+            if ($role_modules) {
+                foreach ($modules as $module_name => $config) {
+                    if (!in_array($module_name, $role_modules)) {
+                        unset($modules[$module_name]);
+                    }
                 }
             }
         }
 
-        if ($modules) {
-            return view('layouts.origin.modules')->with(['data' => $modules]);
-        } else {
-            return redirect()->route('logout');
-        }
+        return view('layouts.origin.modules')->with(['data' => $modules]);
     }
 
     // put all functions to be performed after save
@@ -66,6 +61,11 @@ class ModuleController extends Controller
             $module_name = $form_data['name'];
             $table_name = $form_data['table_name'];
 
+            // create migration
+            if (isset($form_data['create_migration']) && intval($form_data['create_migration'])) {
+                Artisan::call('make:migration', ['name' => 'create_' . $table_name . '_table', '--create' => $table_name]);
+            }
+
             // create controller if doesn't exists
             if (!File::exists(app_path('Http/Controllers/' . $form_data["controller_name"] . '.php'))) {
                 if (!isset($form_data['is_child_table'])) {
@@ -82,17 +82,12 @@ class ModuleController extends Controller
                 Artisan::call('make:model', ['name' => $module_name]);
             }
 
-            // create migration
-            if (isset($form_data['create_migration']) && intval($form_data['create_migration'])) {
-                Artisan::call('make:migration', ['name' => 'create_' . $table_name . '_table', '--create' => $table_name]);
-            }
-
             // create view file if doesn't exists
             if (!File::exists(resource_path('views/layouts/modules/' . $form_data["slug"] . '.blade.php'))) {
                 File::put(resource_path('views/layouts/modules/' . $form_data["slug"] . '.blade.php'), '');
             }
 
-            // create migration file for module data
+            // create migration file for seeding module data
             $this->createDataMigration($form_data);
         }
 
@@ -102,22 +97,27 @@ class ModuleController extends Controller
     // put all functions to be performed after delete
     public function afterDelete($data)
     {
+        $module_table = $this->getModuleTable('Module');
+        $name = $data[$module_table]['name'];
+        $id = $data[$module_table]['id'];
+
+        $this->moduleDeleteMigration($name, $id);
         Cache::forget('app_modules');
     }
 
     // create seeder file with the module data
     public function createDataMigration($data)
     {
-        $file_name = date('Y_m_d_his') . "_create_" . strtolower($data['name']) . "_module";
         $int_fields = ['is_active', 'create_migration', 'sequence_no', 'show', 'is_child_table'];
         $app_name = getAppName();
+        $id_numbering = spell_numbers($data['id']);
         $counter = 0;
 
         $file_text = "<?php\r\r";
         $file_text .= "use " . $app_name . "\Module;\r";
         $file_text .= "use Illuminate\Database\Schema\Blueprint;\r";
         $file_text .= "use Illuminate\Database\Migrations\Migration;\r\r";
-        $file_text .= "class Create" . $data['name'] . "Module extends Migration\r";
+        $file_text .= "class Seed" . $data['name'] . $id_numbering . "Module extends Migration\r";
         $file_text .= "{\r";
         $file_text .= "\t" . 'public function up()'. "\r";
         $file_text .= "\t{\r";
@@ -152,6 +152,38 @@ class ModuleController extends Controller
         $file_text .= "\t}\r";
         $file_text .= "}\r";
 
+        $file_name = date('Y_m_d_His') . "_seed_" . strtolower($data['name']) . "_" . snake_case($id_numbering) . "_module";
+        File::put(database_path('migrations/' . $file_name . '.php'), $file_text);
+
+        $max_migration_batch = DB::table('migrations')->max('batch');
+        DB::table('migrations')->insert(['migration' => $file_name, 'batch' => $max_migration_batch + 1]);
+
+        system('composer dump-autoload');
+    }
+
+    // prepare migration file for deleting module
+    public function moduleDeleteMigration($module_name, $id)
+    {
+        $app_name = getAppName();
+        $id_numbering = spell_numbers($id);
+
+        $file_text = "<?php\r\r";
+        $file_text .= "use " . $app_name . "\Module;\r";
+        $file_text .= "use Illuminate\Database\Schema\Blueprint;\r";
+        $file_text .= "use Illuminate\Database\Migrations\Migration;\r\r";
+        $file_text .= "class Delete" . $module_name . $id_numbering . "Module extends Migration\r";
+        $file_text .= "{\r";
+        $file_text .= "\t" . 'public function up()'. "\r";
+        $file_text .= "\t{\r";
+        $file_text .= "\t\t" . "Module::where('name', '" . $module_name . "')->delete();\r";
+        $file_text .= "\t}\r\r";
+        $file_text .= "\t" . 'public function down()'. "\r";
+        $file_text .= "\t{\r";
+        $file_text .= "\r";
+        $file_text .= "\t}\r";
+        $file_text .= "}\r";
+
+        $file_name = date('Y_m_d_His') . "_delete_" . strtolower($module_name) . "_" . snake_case($id_numbering) . "_module";
         File::put(database_path('migrations/' . $file_name . '.php'), $file_text);
 
         $max_migration_batch = DB::table('migrations')->max('batch');

@@ -1,21 +1,20 @@
 $( document ).ready(function() {
-	$(".new_row").on("click", function() {
+	$(".new-row").on("click", function() {
 		var table = $("#" + $(this).data("target"));
 		add_new_row(table);
 		$(table).find("tr:last > td:eq(3) > input").focus();
 	});
 
-
 	// remove row
-	$("table").on("click" , '#remove_row', function() {
+	$("table").on("click" , '.remove-row', function() {
 		var target = $(this).closest("table").attr("id");
 		var tbody = $(this).closest("table").find("tbody");
 		var table = $(this).closest("table");
 
-		if ($("#id").val()) {
+		if ($('[name="id"]').val()) {
 			// if ID is present, means the record already exists in db
 			// At that time if row is deleted then set action as delete and hide the row
-			$(this).closest("tr.table_record").find("td#action").find("input").val("delete");
+			$(this).closest("tr.table_record").find("td.action").find("input").val("delete");
 			$(this).closest("tr.table_record").hide();
 		}
 		else {
@@ -26,7 +25,7 @@ $( document ).ready(function() {
 		// show total no of row badge
 		show_total_badge(target);
 
-		if ($(tbody).find("tr").length) {
+		if ($(tbody).find("tr:visible").length) {
 			maintain_idx(tbody);
 		}
 		else {
@@ -36,21 +35,27 @@ $( document ).ready(function() {
 		enable_save_button();
 	});
 
-
 	// make row editable
 	$("table").on("click", '.table_record', function() {
 		$(this).find("input").removeClass("simple-box");
 	});
 
-
 	// set action update if input is changed
 	$("table > tbody > tr").on("change", 'input, select, textarea', function() {
-		if ($("#id").val()) {
-			$(this).closest("tr").find("td#action > input").val("update");
+		if ($('[name="id"]').val()) {
+			$(this).closest("tr").find("td.action > input").val("update");
+		}
+
+		if ($(this).attr("type") == "checkbox") {
+			if (this.checked) {
+				$(this).parent().find('.checkbox-value').val('1');
+			}
+			else {
+				$(this).parent().find('.checkbox-value').val('0');
+			}
 		}
 	});
 });
-
 
 function add_new_row(table, idx, action) {
 	var thead = $(table).find("thead");
@@ -63,9 +68,8 @@ function add_new_row(table, idx, action) {
 
 	// add row html
 	add_row(table, idx ? idx : $(tbody).find("tr").length + 1, action);
-	show_total_badge($("." + $(table).attr("id")).find(".new_row").data("target"));
+	show_total_badge($("." + $(table).attr("id")).find(".new-row").data("target"));
 }
-
 
 function add_row(table, idx, action) {
 	var table_name = $(table).data("table");
@@ -77,33 +81,33 @@ function add_row(table, idx, action) {
 	var row = '<tr class="table_record">';
 
 	$.each($(thead).find("tr > th"), function(index, heads) {
-		if ($(heads).attr("id") == "sr_no" && index == 0) {
+		if ($(heads).hasClass('sr-no') && index == 0) {
 			row += '<td class="text-center" style="vertical-align: middle;"></td>';
 		}
-		else if ($(heads).attr("id") == "remove") {
+		else if ($(heads).hasClass('remove')) {
 			row += '<td class="text-center" data-idx="' + idx + '">\
-				<button type="button" class="btn btn-danger" id="remove_row">\
+				<button type="button" class="btn btn-danger btn-xs remove-row">\
 					<i class="fa fa-times"></i>\
 				</button>\
 			</td>';
 		}
-		else if ($(heads).attr("id") == "action") {
-			row += '<td id="action" style="display: none;">\
+		else if ($(heads).hasClass('action')) {
+			row += '<td class="action" style="display: none;">\
 				<input type="text" class="form-control input-sm" name="' + table_name + '[' + (idx - 1) + '][action]" value="' + row_action + '">\
 			</td>';
 
 			$(this).find('input[name="' + table_name + '[' + (idx - 1) + '][action]"]').val(row_action);
 		}
-		else if ($(heads).attr("id") == "row_id") {
-			row += '<td id="row_id" style="display: none;">\
+		else if ($(heads).hasClass('row-id')) {
+			row += '<td class="row-id" style="display: none;">\
 				<input type="text" class="form-control input-sm" name="' + table_name + '[' + (idx - 1) + '][id]">\
 			</td>';
 		}
 		else {
 			var field_type = $(heads).data("field-type");
 			var field_name = $(heads).data("field-name");
-			var target_module = $(heads).data("target-module");
-			var target_field = $(heads).data("target-field");
+			var target_module = $(heads).data("ac-module");
+			var target_field = $(heads).data("ac-field");
 			var readonly = ($(heads).data("readonly") == "yes") ? "readonly" : "";
 			var hidden = ($(heads).data("hidden") == "yes") ? "style='display: none;'" : "";
 
@@ -113,7 +117,7 @@ function add_row(table, idx, action) {
 				row += '<td data-field-type="link">\
 					<input type="text" class="form-control input-sm autocomplete" \
 					name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" \
-					autocomplete="off" data-target-module="' + target_module + '" data-target-field="' + target_field + '"' + readonly + '>\
+					autocomplete="off" data-ac-module="' + target_module + '" data-ac-field="' + target_field + '"' + readonly + '>\
 				</td>';
 			}
 			else if (field_type == "image") {
@@ -141,6 +145,12 @@ function add_row(table, idx, action) {
 
 				row += '</select></td>';
 			}
+			else if (field_type == "checkbox") {
+				row += '<td data-field-type="checkbox"' + hidden + ' class="text-center" style="vertical-align: middle;">\
+					<input type="hidden" class="checkbox-value" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" value="0">\
+					<input type="checkbox" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" ' + readonly + '>\
+				</td>';
+			}
 			else if (field_type == "date") {
 				row += '<td data-field-type="date">\
 					<div class="input-group date" data-autoclose="true">\
@@ -165,7 +175,7 @@ function add_row(table, idx, action) {
 				if (target_module && target_field) {
 					row += '<td data-field-type="' + field_type + '"' + hidden + '>\
 						<input type="text" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" \
-						class="form-control input-sm" data-target-module="' + target_module + '" data-target-field="' + target_field + '" autocomplete="off"' + readonly + '>\
+						class="form-control input-sm" data-ac-module="' + target_module + '" data-ac-field="' + target_field + '" autocomplete="off"' + readonly + '>\
 					</td>';
 				}
 				else {
@@ -191,7 +201,6 @@ function add_row(table, idx, action) {
 	set_pickers_in_table(table_name, table, field_types);
 }
 
-
 function maintain_idx(tbody) {
 	var idx = 1;
 	$.each($(tbody).find("tr"), function(index, row) {
@@ -203,7 +212,6 @@ function maintain_idx(tbody) {
 	});
 }
 
-
 function show_empty_row(table) {
 	var colspan = $(table).find("thead > tr > th").length;
 	var empty_row = '<tr class="odd">\
@@ -212,12 +220,10 @@ function show_empty_row(table) {
 	$(table).find("tbody").append(empty_row);
 }
 
-
 function show_total_badge(target) {
 	var total_rows = $("." + target).find("table#" + target).find("tbody > tr:visible").length;
 	$("." + target).find("#total_badge").html(total_rows);
 }
-
 
 // add multiple rows for table at the time of loading
 function add_new_rows(table_name, records) {
@@ -244,8 +250,8 @@ function add_new_rows(table_name, records) {
 		$.each($(thead).find("tr > th"), function(index, heads) {
 			var field_type = $(heads).data("field-type");
 			var field_name = $(heads).data("field-name");
-			var target_module = $(heads).data("target-module");
-			var target_field = $(heads).data("target-field");
+			var target_module = $(heads).data("ac-module");
+			var target_field = $(heads).data("ac-field");
 			var readonly = ($(heads).data("readonly") == "yes") ? "readonly" : "";
 			var hidden = ($(heads).data("hidden") == "yes") ? "style='display: none;'" : "";
 			field_types.push(field_type);
@@ -267,17 +273,17 @@ function add_new_rows(table_name, records) {
 			}
 
 			// set default table values
-			if ($(heads).attr("id") == "sr_no") {
+			if ($(heads).hasClass('sr-no')) {
 				rows += '<td class="text-center" style="vertical-align: middle;">' + (idx + 1) + '</td>';
 			}
-			else if ($(heads).attr("id") == "remove") {
+			else if ($(heads).hasClass('remove')) {
 				rows += '<td class="text-center" data-idx="' + (idx + 1) + '">\
-					<button type="button" class="btn btn-danger" id="remove_row">\
+					<button type="button" class="btn btn-danger btn-xs remove-row">\
 						<i class="fa fa-times"></i>\
 					</button>\
 				</td>';
 			}
-			else if ($(heads).attr("id") == "action") {
+			else if ($(heads).hasClass('action')) {
 				// while showing data
 				if (value["id"]) {
 					var action = "none";
@@ -287,12 +293,12 @@ function add_new_rows(table_name, records) {
 					var action = "create";
 				}
 
-				rows += '<td id="action" style="display: none;">\
+				rows += '<td class="action" style="display: none;">\
 					<input type="text" class="form-control input-sm" name="' + table_name + '[' + idx + '][action]" value="' + action + '">\
 				</td>';
 			}
-			else if ($(heads).attr("id") == "row_id") {
-				rows += '<td id="row_id" style="display: none;">\
+			else if ($(heads).hasClass("row-id")) {
+				rows += '<td class="row-id" style="display: none;">\
 					<input type="text" class="form-control input-sm" name="' + table_name + '[' + idx + '][id]" value="' + value["id"] + '">\
 				</td>';
 			}
@@ -302,7 +308,7 @@ function add_new_rows(table_name, records) {
 					rows += '<td data-field-type="link">\
 						<input type="text" class="form-control input-sm autocomplete" \
 						name="' + table_name + '[' + idx + '][' + field_name + ']" \
-						autocomplete="off" data-target-module="' + target_module + '" data-target-field="' + target_field + '"' + readonly + ' value="' + field_value + '">\
+						autocomplete="off" data-ac-module="' + target_module + '" data-ac-field="' + target_field + '"' + readonly + ' value="' + field_value + '">\
 					</td>';
 				}
 				else if (field_type == "image") {
@@ -342,6 +348,12 @@ function add_new_rows(table_name, records) {
 
 					rows += '</select></td>';
 				}
+				else if (field_type == "checkbox") {
+					rows += '<td data-field-type="checkbox"' + hidden + ' class="text-center" style="vertical-align: middle;">\
+						<input type="hidden" class="checkbox-value" name="' + table_name + '[' + idx + '][' + field_name + ']" ' + readonly + ' value="' + (parseInt(field_value) ? 1 : 0) + '">\
+						<input type="checkbox" name="' + table_name + '[' + idx + '][' + field_name + ']" ' + readonly + (parseInt(field_value) ? " checked" : "") + '>\
+					</td>';
+				}
 				else if (field_type == "time") {
 					rows += '<td data-field-type="time">\
 						<div class="input-group clockpicker" data-autoclose="true">\
@@ -356,7 +368,7 @@ function add_new_rows(table_name, records) {
 					if (target_module && target_field) {
 						rows += '<td data-field-type="' + field_type + '"' + hidden + '>\
 							<input type="text" name="' + table_name + '[' + idx + '][' + field_name + ']" \
-							class="form-control input-sm" data-target-module="' + target_module + '" data-target-field="' + target_field + '" autocomplete="off"' + readonly + ' value="' + field_value + '">\
+							class="form-control input-sm" data-ac-module="' + target_module + '" data-ac-field="' + target_field + '" autocomplete="off"' + readonly + ' value="' + field_value + '">\
 						</td>';
 					}
 					else {
@@ -387,8 +399,7 @@ function add_new_rows(table_name, records) {
 	set_pickers_in_table(table_name, table, field_types);
 }
 
-
-// set datepicker, clockpicker in child table
+// set datepicker, etc in child table
 function set_pickers_in_table(table_name, table, field_types) {
 	// set date field inside table elements
 	if (field_types.contains("date")) {
@@ -410,7 +421,7 @@ function set_pickers_in_table(table_name, table, field_types) {
 				var tab_records = $(table).find("tbody > tr").length;
 
 				if ($.trim($('body').find('[name="id"]').val()) && doc_records == tab_records) {
-					$(element).closest("tr").find("td#action > input").val("update");
+					$(element).closest("tr").find("td.action > input").val("update");
 				}
 
 				if (typeof change_doc === "function") {

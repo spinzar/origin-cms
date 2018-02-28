@@ -28,7 +28,6 @@ class CreateTabModule extends Migration
             $table->string('icon')->nullable();
             $table->string('icon_color')->nullable();
             $table->string('form_title')->nullable();
-            $table->string('search_field')->nullable();
             $table->string('image_field')->nullable();
             $table->boolean('is_child_table')->default('0');
             $table->string('sort_field')->default('id');

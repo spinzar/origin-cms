@@ -19,8 +19,9 @@ class Module extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'is_active', 'display_name', 'table_name', 'controller_name', 'slug', 'sequence_no', 
-        'show', 'list_view_columns', 'bg_color', 'icon', 'icon_color', 'form_title', 'search_field', 
-        'image_field', 'is_child_table', 'sort_field', 'sort_order', 'description', 'owner', 'last_updated_by'
+        'name', 'is_active', 'display_name', 'table_name', 'controller_name', 'slug', 
+        'sequence_no', 'show', 'list_view_columns', 'bg_color', 'icon', 'icon_color', 
+        'form_title', 'image_field', 'is_child_table', 'sort_field', 'sort_order', 
+        'description', 'owner', 'last_updated_by'
     ];
 }

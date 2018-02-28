@@ -1,13 +1,8 @@
 $( document ).ready(function() {
 	var current_page = 1;
 	var filters_applied = false;
+	var report_table = '';
 
-	var report_table = $('table#report-table').DataTable({
-		"scrollY": 375,
-		"scrollX": true,
-	});
-
-	// get records
 	refresh_grid_view(current_page);
 	enable_autocomplete();
 
@@ -20,7 +15,6 @@ $( document ).ready(function() {
 	});
 	$("#report-table_length").find("select").addClass("form-control");
 
-
 	if ($("#from_date") && $("#to_date")) {
 		$(function () {
 			$("#fromdate").on("dp.change", function (e) {
@@ -29,10 +23,10 @@ $( document ).ready(function() {
 		});
 	}
 
-
 	// refresh the grid view of report
-	$("#refresh_report").on("click", function() {
+	$("#filter_report").on("click", function() {
 		var filter_found = false;
+
 		$.each($("#report-filters").find("input, select"), function() {
 			if ($(this).val()) {
 				filter_found = true;
@@ -41,6 +35,7 @@ $( document ).ready(function() {
 
 		if (filter_found) {
 			filters_applied = true;
+			current_page = 1;
 			refresh_grid_view(current_page);
 		}
 		else {
@@ -48,32 +43,27 @@ $( document ).ready(function() {
 		}
 	});
 
-
 	// refresh grid view if record length is changed
 	$('[name="report-table_length"]').on("change", function() {
-		if (!filters_applied) {
-			refresh_grid_view(current_page);
-		}
+		refresh_grid_view(current_page);
 	});
-
 
 	// refresh grid view if search is changed
 	$('#report-table_filter').find('input[type="search"]').on("input change", function() {
-		if ($(this).val() == "" && !filters_applied) {
+		if ($(this).val() == "") {
+			current_page = 1;
 			refresh_grid_view(current_page);
 		}
 	});
 
-
 	// get records when click on pagination links
-	$(document).on('click', '.pagination a', function (e) {
-		if ($(this).attr('href') != "#" && $(this).attr('href').indexOf('page=') >= 0 && !filters_applied) {
+	$(document).on('click', '.origin-pagination a', function (e) {
+		if ($(this).attr('href') != "#" && $(this).attr('href').indexOf('page=') >= 0) {
 			current_page = $(this).attr('href').split('page=')[1];
 			refresh_grid_view(current_page);
 			e.preventDefault();
 		}
 	});
-
 
 	// download the report
 	$("#download_report").on("click", function() {
@@ -88,7 +78,6 @@ $( document ).ready(function() {
 		window.location = app_route + "?download=Yes" + filters;
 	});
 
-
 	function refresh_grid_view(page) {
 		$(".data-loader").show();
 
@@ -98,17 +87,14 @@ $( document ).ready(function() {
 			data: { 'filters': get_report_filters(), 'per_page': $('[name="report-table_length"]').val() },
 			dataType: 'json',
 			success: function(data) {
-				if (filters_applied) {
-					var grid_rows = data['rows'];
-					var total = data['rows'].length;
-				}
-				else {
-					var grid_rows = data['rows']['data'];
-					var from = data['rows']['from'];
-					var to = data['rows']['to'];
-					var total = data['rows']['total'];
+				if (!(report_table instanceof $.fn.dataTable.Api)) {
+					create_table_headers(data['columns']);
 				}
 
+				var grid_rows = data['rows']['data'];
+				var from = data['rows']['from'];
+				var to = data['rows']['to'];
+				var total = data['rows']['total'];
 				var columns = data['columns'];
 				var rows = [];
 				var table_rows = [];
@@ -130,13 +116,7 @@ $( document ).ready(function() {
 					// add each row to datatable using api
 					$.each(rows, function(grid_index, grid_data) {
 						var record = [];
-
-						if (filters_applied) {
-							record.push(grid_index + 1);
-						}
-						else {
-							record.push(grid_index == 0 ? from : from + grid_index);
-						}
+						record.push(grid_index == 0 ? from : from + grid_index);
 
 						$.each(grid_data, function(column_name, column_value) {
 							var form_link = base_url + '/form/' + data["module_slug"];
@@ -166,16 +146,38 @@ $( document ).ready(function() {
 				}
 
 				$(".data-loader").hide();
-				$('#item-count').html(total);
-
-				if (!filters_applied) {
-					$("#report-table_info").html("Showing " + from + " to " + to + " of " + total + " entries");
-					$("#report-table_paginate").empty().append(make_pagination(data['rows']));
-				}
+				$("#report-table_info").html("Showing " + from + " to " + to + " of " + total + " entries");
+				$("#report-table_paginate").empty().append(make_pagination(data['rows']));
 			}
 		});
 	}
 
+	// append columns to table headers and initiliaze datatables
+	function create_table_headers(columns) {
+		var headers = '<tr>\
+			<th>#</th>';
+
+		$.each(columns, function(idx, column) {
+			if (column == "id") {
+				var label = "ID";
+			}
+			else {
+				var label = column.replace(/_/g, " ");
+				label = label.replace("id", "ID").toProperCase();
+			}
+
+			headers += '<th name="' + column + '">' + label + '</th>';
+		});
+
+		headers += '</tr>';
+
+		$('table#report-table').find('thead').empty().append(headers);
+
+		report_table = $('table#report-table').DataTable({
+			"scrollY": 375,
+			"scrollX": true,
+		});
+	}
 
 	// returns the filters for report
 	function get_report_filters() {
@@ -197,54 +199,15 @@ $( document ).ready(function() {
 		return filters;
 	}
 
-
-	// create pagination html
-	function make_pagination(data) {
-		var curr_loc = window.location.href + "?page=";
-		var first_enabled = true;
-		var last_enabled = true;
-		var prev = data['prev_page_url'];
-		var next = data['next_page_url'];
-		var last = data['last_page'];
-
-		var pagination = '<ul class="pagination">';
-
-		if (data['current_page'] == 1 || data['total'] == 10) {
-			first_enabled = false;
+	$(window).on('hashchange', function() {
+		if (window.location.hash) {
+			var page = window.location.hash.replace('#', '');
+			if (page == Number.NaN || page <= 0) {
+				return false;
+			}
+			else {
+				refresh_grid_view(page);
+			}
 		}
-
-		if (data['current_page'] == data['last_page']) {
-			last_enabled = false;
-		}
-
-		pagination += '<li class="paginate_button first' + (first_enabled ? "" : " disabled") + '" id="report-table_first">\
-			<a href="' + (first_enabled ? curr_loc + "1" : "#") + '" aria-controls="report-table" data-dt-idx="0" tabindex="0">First</a>\
-		</li>\
-		<li class="paginate_button previous' + (prev ? "" : " disabled") + '" id="report-table_previous">\
-			<a href="' + (prev ? prev : "#") + '" aria-controls="report-table" data-dt-idx="1" tabindex="0">Previous</a>\
-		</li>';
-
-		pagination += '<li class="paginate_button next' + (next ? "" : " disabled") + '" id="report-table_next">\
-			<a href="' + (next ? next : "#") + '" aria-controls="report-table" data-dt-idx="2" tabindex="0">Next</a>\
-		</li>\
-		<li class="paginate_button last' + (last_enabled ? "" : " disabled") + '" id="report-table_last">\
-			<a href="' + (last_enabled ? curr_loc + last : "#") + '" aria-controls="report-table" data-dt-idx="3" tabindex="0">Last</a>\
-		</li>';
-
-		pagination += '</ul>';
-		return pagination;
-	}
-});
-
-
-$(window).on('hashchange', function() {
-	if (window.location.hash && !filters_applied) {
-		var page = window.location.hash.replace('#', '');
-		if (page == Number.NaN || page <= 0) {
-			return false;
-		}
-		else {
-			refresh_grid_view(page);
-		}
-	}
+	});
 });

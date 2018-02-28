@@ -28,12 +28,12 @@ class SettingsController extends Controller
             'module' => 'Settings',
             'slug' => 'settings',
             'module_type' => 'Single',
-            'table_name' => 'oc_settings'
+            'table_name' => 'oc_settings',
+            'permissions' => ['update' => true]
         ];
 
         return view('templates.form_view', $settings_data);
     }
-
 
     // Save app settings
     public function save(Request $request)

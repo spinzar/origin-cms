@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use DB;
 use App;
 use Cache;
+use Session;
 use Exception;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\PermController;
@@ -51,19 +52,113 @@ class ListViewController extends Controller
         }
     }
 
-    public function getRecords($search_text = null, $search_field = null)
+    public function showListView($request)
+    {
+        $table_name = $this->module['table_name'];
+        $columns = array_map('trim', explode(",", $this->module['list_view_columns']));
+        $form_title = $this->module['form_title'];
+
+        if ($request->ajax() || $request->is('api/*')) {
+            if ($request->has('delete_list') && !empty($request->get('delete_list'))) {
+                $delete_data = $this->deleteSelectedRecords($request, $request->get('delete_list'));
+                return response()->json(['data' => $delete_data], 200);
+            }
+
+            try {
+                $list_view_data = $this->prepareListViewData($request);
+                return $list_view_data;
+            } catch(Exception $e) {
+                return response()->json(['message' => $e->getMessage()], 404);
+            }
+        }
+        else {
+            try {
+                $list_view_data = $this->prepareListViewData($request);
+                return view('templates.list_view', $list_view_data);
+            } catch(Exception $e) {
+                return back()->with(['msg' => $e->getMessage()]);
+            }
+        }
+    }
+
+    // prepare list view data
+    public function prepareListViewData($request)
+    {
+        $user_role = auth()->user()->role;
+        $table_schema = $this->getTableSchema($this->module['table_name']);
+
+        try {
+            $rows = $this->getRecords($request, $table_schema);
+        } catch(Exception $e) {
+            $error = str_replace("'", "", $e->getMessage());
+            throw new Exception($error);
+        }
+
+        if ($user_role == 'System Administrator') {
+            $can_create = true;
+            $can_delete = true;
+        } else {
+            $can_create = $this->roleWiseModules($user_role, "Create", $this->module['name']);
+            $can_delete = $this->roleWiseModules($user_role, "Delete", $this->module['name']);
+        }
+
+        $list_view_data = [
+            'module' => $this->module,
+            'rows' => $rows,
+            'columns' => array_map('trim', explode(",", $this->module['list_view_columns'])),
+            'table_columns' => $table_schema,
+            'can_create' => $can_create,
+            'can_delete' => $can_delete
+        ];
+
+        return $list_view_data;
+    }
+
+    // filter list view data based on filter value
+    public function deleteSelectedRecords($request, $delete_records)
+    {
+        $result = [];
+        $origin_controller = App::make("App\\Http\\Controllers\\OriginController");
+
+        foreach ($delete_records as $id) {
+            $origin_controller->delete($request, $this->module['slug'], $id);
+
+            array_push($result, [
+                'success' => Session::pull('success'),
+                'msg' => Session::pull('msg'),
+                'id' => $id
+            ]);
+        }
+
+        return $result;
+    }
+
+    public function getRecords($request, $table_schema)
     {
         $table = $this->module['table_name'];
         $table_columns = array_map('trim', explode(",", $this->module['list_view_columns']));
         $sort_field = $this->module['sort_field'];
         $sort_order = $this->module['sort_order'];
+
+        if ($request->has('sorting') && $request->get('sorting')) {
+            $sort_filter = $request->get('sorting');
+
+            if (isset($sort_filter['field']) && $sort_filter['field'] && 
+                isset($sort_filter['order']) && $sort_filter['order']) {
+
+                $sort_field = $sort_filter['field'];
+                $sort_order = $sort_filter['order'];
+            }
+        }
+
         $perm_fields = [];
+        $records_per_page = $this->getAppSetting('list_view_records');
 
         if (!in_array("id", $table_columns)) {
             array_push($table_columns, "id");
         }
 
-        $record_query = DB::table($table)->select($table_columns);
+        $rows = DB::table($table)->select($table_columns);
 
         if (auth()->user()->role != 'System Administrator') {
             $perm_fields = $this->moduleWisePermissions(auth()->user()->role, 'Read', $this->module['name']);
@@ -71,104 +166,74 @@ class ListViewController extends Controller
             if ($perm_fields) {
                 foreach ($perm_fields as $field_name => $field_value) {
                     if (is_array($field_value)) {
-                        $record_query = $record_query->whereIn($field_name, $field_value);
+                        $rows = $rows->whereIn($field_name, $field_value);
                     } else {
-                        $record_query = $record_query->where($field_name, $field_value);
+                        $rows = $rows->where($field_name, $field_value);
                     }
                 }
             }
         }
 
-        // ajax search in list view
-        if ($search_text) {
-            $search_in = $this->module['search_field'];
-            $search_field = $search_field ? $search_field : $search_in;
+        if ($request->has('filters') && $request->get('filters')) {
+            $filters = $request->get('filters');
 
-            return DB::table($table)->select($table_columns)
-                ->where($search_field, $search_text)
-                ->orderBy($sort_field, $sort_order)
-                ->get();
-        } else {
-            $records_per_page = $this->getAppSetting('list_view_records');
-            return $record_query->orderBy($sort_field, $sort_order)->paginate((int) $records_per_page);
-        }
-    }
+            foreach ($filters as $filter) {
+                if (isset($filter['column_name']) && $filter['column_name'] && 
+                    isset($filter['column_operator']) && $filter['column_operator'] &&
+                    isset($filter['column_value'])) {
 
-    public function showListView($request)
-    {
-        $table_name = $this->module['table_name'];
-        $columns = array_map('trim', explode(",", $this->module['list_view_columns']));
-        $form_title = $this->module['form_title'];
+                    $column = $filter['column_name'];
+                    $operator = $filter['column_operator'];
+                    $value = $filter['column_value'];
 
-        if ($request->ajax()) {
-            if ($request->has('search') && $request->get('search')) {
-                // prepare rows based on search criteria
-                return $this->prepareListViewData($request->get('search'), $request->get('search_field'));
-            } elseif ($request->has('delete_list') && !empty($request->get('delete_list'))) {
-                // delete the selected rows from the list view
-                return $this->deleteSelectedRecords($request, $request->get('delete_list'));
-            } else {
-                // return list of all rows for refresh list
-                return $this->prepareListViewData();
-            }
-        }
-        else {
-            try {
-                $list_view_data = $this->prepareListViewData();
-            } catch(Exception $e) {
-                return redirect()->route('home')->with('msg', $e->getMessage());
-            }
+                    if (isset($table_schema[$column]) && $table_schema[$column] == "date" && $value) {
+                        $value = date('Y-m-d', strtotime($value));
+                    } elseif (isset($table_schema[$column]) && $table_schema[$column] == "datetime" && $value) {
+                        $value = date('Y-m-d H:i:s', strtotime($value));
+                    } elseif (isset($table_schema[$column]) && $table_schema[$column] == "time" && $value) {
+                        $value = date('H:i:s', strtotime($value));
+                    }
 
-            return view('templates.list_view', $list_view_data);
-        }
-    }
+                    if ($operator == "like") {
+                        $rows = $rows->where($column, $operator, "%" . $value . "%");
+                    } elseif ($operator == "in") {
+                        if (!is_array($value)) {
+                            $value = explode(",", $value);
+                            $value = array_map('trim', $value);
+                        }
 
+                        $rows = $rows->whereIn($column, $value);
+                    } elseif ($operator == "notin") {
+                        if (!is_array($value)) {
+                            $value = explode(",", $value);
+                            $value = array_map('trim', $value);
+                        }
 
-    // prepare list view data
-    public function prepareListViewData($search_text = null, $search_field = null)
-    {
-        try {
-            $rows = $this->getRecords($search_text, $search_field);
-        } catch(Exception $e) {
-            throw new Exception('"' . $this->module["table_name"] . '" table not found in database');
-        }
+                        $rows = $rows->whereNotIn($column, $value);
+                    } elseif ($operator == "between") {
+                        if (!is_array($value)) {
+                            $value = explode(",", $value);
+                            $value = array_map('trim', $value);
+                        }
 
-        $list_view_data = [
-            'module' => $this->module['name'],
-            'rows' => $rows,
-            'columns' => array_map('trim', explode(",", $this->module['list_view_columns'])),
-            'form_title' => $this->module['form_title'],
-            'title' => $this->module['display_name'],
-            'module' => $this->module['name'],
-            'slug' => $this->module['slug'],
-            'link_field' => $this->module['link_field'],
-            'search_via' => $this->module['search_field'],
-            'count' => count($rows)
-        ];
+                        $rows = $rows->whereBetween($column, $value);
+                    } elseif ($operator == "notbetween") {
+                        if (!is_array($value)) {
+                            $value = explode(",", $value);
+                            $value = array_map('trim', $value);
+                        }
 
-        return $list_view_data;
-    }
-
-
-    // filter list view data based on filter value
-    public function deleteSelectedRecords($request, $delete_records)
-    {
-        $delete_ids = [];
-
-        foreach ($delete_records as $url) {
-            $id = last(explode("/", $url));
-
-            if (!in_array($id, $delete_ids)) {
-                array_push($delete_ids, $id);
+                        $rows = $rows->whereNotBetween($column, $value);
+                    } else {
+                        $rows = $rows->where($column, $operator, $value);
+                    }
+                }
             }
         }
 
-        $origin_controller = App::make("App\\Http\\Controllers\\OriginController");
+        $rows = $rows->orderBy($sort_field, $sort_order)
+            ->paginate((int) $records_per_page);
 
-        foreach ($delete_ids as $id) {
-            $origin_controller->delete($request, $this->module['slug'], $id);
-        }
-
-        return $delete_ids;
+        return $rows;
     }
 }

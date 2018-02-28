@@ -24,7 +24,7 @@ class OriginController extends Controller
     public $module;
 
     /**
-     * Display the form view
+     * Returns parent and child table records
      *
      * @return \Illuminate\Http\Response
      */
@@ -48,9 +48,8 @@ class OriginController extends Controller
         }
     }
 
-
     /**
-     * Copy the form values to a new form
+     * Copy the parent and child table records to a new form
      *
      * @return \Illuminate\Http\Response
      */
@@ -65,6 +64,13 @@ class OriginController extends Controller
         $this->module['link_field_value'] = $id;
         $show_response = $this->showDoc($this->module);
 
+        if (!$show_response['data']['permissions']['create']) {
+            $show_response['status'] = "Unauthorized";
+            $show_response['status_code'] = 401;
+            $show_response['message'] = 'You are not authorized to create "'. $this->module['display_name'] . '"';
+            $show_response['data']['form_data'] = [];
+        }
+
         if ($request->is('api/*')) {
             // Send JSON response to API
             return response()->json($show_response, $show_response['status_code']);
@@ -74,9 +80,8 @@ class OriginController extends Controller
         }
     }
 
-
     /**
-     * Stores/Saves the form value to the database
+     * Stores/Saves the parent and child table records to the database
      *
      * @return \Illuminate\Http\Response
      */
@@ -116,9 +121,8 @@ class OriginController extends Controller
         }
     }
 
-
     /**
-     * Deletes the form value from the database
+     * Deletes the parent and child table records from the database
      *
      * @return \Illuminate\Http\Response
      */
@@ -210,6 +214,8 @@ class OriginController extends Controller
                 return redirect()->route('home')->with('msg', $response['message']);
             }
         } elseif (isset($response['status_code']) && $response['status_code'] == 404) {
+            Session::flash('success', false);
+
             if ($view_type && $view_type == 'list_view') {
                 return redirect()->route('show.list', array('slug' => $module_slug))
                     ->with(['msg' => $response['message']]);
@@ -219,9 +225,11 @@ class OriginController extends Controller
                 return redirect()->route('show.doc', array('slug' => $module_slug, 'id' => $form_link_field_value))
                     ->with(['msg' => $response['message']]);
             } else {
-                abort('404');
+                return redirect()->route('home')->with('msg', $response['message']);
             }
         } elseif (isset($response['status_code']) && $response['status_code'] == 500) {
+            Session::flash('success', false);
+
             if ($view_type && $view_type == 'list_view') {
                 return redirect()->route('show.list', array('slug' => $module_slug))
                     ->with(['msg' => $response['message']]);

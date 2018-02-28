@@ -30,10 +30,9 @@ class ReportController extends Controller
 
     public function showReport(Request $request, $report_name)
     {
-        if (in_array(auth()->user()->role, ["System Administrator", "Administrator"])) {
-            $user_role = auth()->user()->role;
-            $user_name = auth()->user()->full_name;
+        $user_role = auth()->user()->role;
 
+        if (in_array($user_role, ["System Administrator", "Administrator"])) {
             if (isset(config('reports')[studly_case($report_name)])) {
                 $report_config = config('reports')[studly_case($report_name)];
             } else {
@@ -46,24 +45,22 @@ class ReportController extends Controller
             }
 
             if ($request->has('download') && $request->get('download') == 'Yes') {
-                $report_data = $this->getData($request, $report_name, $user_role, $user_name, true);
+                $report_data = $this->getData($request, $report_name, true);
                 return $this->downloadReport(studly_case($report_name), $report_data['columns'], $report_data['rows']);
             } else {
-                $report_data = $this->getData($request, $report_name, $user_role, $user_name);
-                $report_view_data = array();
-
-                if (isset($report_data['module']) && $report_data['module']
-                    && isset($report_data['link_field']) && $report_data['link_field']
-                    && isset($report_data['form_title']) && $report_data['form_title']) {
-                    $report_view_data = $this->prepareReportViewData($report_name, $report_data['columns'], $report_data['rows'], $report_data['module'], $report_data['link_field'], $report_data['form_title']);
-                } else {
-                    $report_view_data = $this->prepareReportViewData($report_name, $report_data['columns'], $report_data['rows']);
-                }
-
                 if ($request->ajax()) {
-                    return $report_view_data;
+                    $report_data = $this->getData($request, $report_name);
+
+                    if (isset($report_data['module']) && $report_data['module']) {
+                        $report_data['module_slug'] = $this->getModuleSlug($report_data['module']);
+                    }
+
+                    return $report_data;
                 } else {
-                    return view('templates.report_view', $report_view_data);
+                    return view('templates.report_view', [
+                        'title' => awesome_case($report_name),
+                        'file' => 'layouts.reports.' . $report_name
+                    ]);
                 }
             }
         } else {
@@ -71,8 +68,7 @@ class ReportController extends Controller
         }
     }
 
-
-    public function getData($request, $report_name, $user_role, $user_name, $download = false)
+    public function getData($request, $report_name, $download = false)
     {
         $report_controller = App::make("App\\Http\\Controllers\\Reports\\" . studly_case($report_name));
 
@@ -82,31 +78,8 @@ class ReportController extends Controller
             $per_page = 50;
         }
 
-        return $report_controller->getData($request, $per_page, false, $download);
+        return $report_controller->getData($request, $per_page, $download);
     }
-
-
-    // Returns an array of all data to be passed to report view
-    public function prepareReportViewData($report_name, $columns, $rows, $module = null, $link_field = null, $form_title = null)
-    {
-        $report_view_data = [
-            'rows' => $rows,
-            'columns' => $columns,
-            'title' => awesome_case($report_name),
-            'file' => 'layouts.reports.' . $report_name,
-            'count' => count($rows)
-        ];
-
-        if ($module && $link_field && $form_title) {
-            $report_view_data['module'] = $module;
-            $report_view_data['module_slug'] = $this->getModuleSlug($module);
-            $report_view_data['link_field'] = $link_field;
-            $report_view_data['form_title'] = $form_title;
-        }
-
-        return $report_view_data;
-    }
-
 
     // make downloadable xls file for report
     public function downloadReport($report_name, $columns, $rows, $suffix = null, $action = null, $custom_rows = null)

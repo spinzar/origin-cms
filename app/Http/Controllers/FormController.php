@@ -18,38 +18,52 @@ trait FormController
     public $file_fields = [];
     // define modules to create, update or delete user when module is saved
     public $user_via_modules = [];
-    // define modules to send email when create or update is performed
-    public $email_modules = [];
     // define modules to create slug when create or update is performed
     public $slug_modules = [];
     // stores link field value globally across the controller
     public $link_field_value;
 
-
     public function showDoc($module)
     {
         $user_role = auth()->user()->role;
+        $read_allowed = true;
 
-        if ($user_role == 'System Administrator') {
+        if ($user_role != 'System Administrator') {
+            $read_allowed = $this->roleWiseModules($user_role, "Read", $module['name']);
+        }
+
+        if ($read_allowed) {
             return $this->showForm($module, $user_role);
         } else {
-            $can_read = $this->roleWiseModules($user_role, "Read", $module['name']);
+            Session::flash('success', false);
+            $message = 'You are not authorized to view "'. $module['display_name'] . '" records';
 
-            if ($can_read) {
-                return $this->showForm($module, $user_role);
-            } else {
-                $message = 'You are not authorized to view "'. $module['display_name'] . '" records';
-                return $this->sendResponse(401, $message);
-            }
+            return $this->sendResponse(401, $message);
         }
     }
 
-
     public function showForm($module, $user_role)
     {
+        if ($user_role == "System Administrator") {
+            $perms = ['create' => true, 'update' => true, 'delete' => true];
+        } else {
+            $perms = [];
+            $perms['create'] = $this->roleWiseModules($user_role, "Create", $module['name']);
+            $perms['update'] = $this->roleWiseModules($user_role, "Update", $module['name']);
+            $perms['delete'] = $this->roleWiseModules($user_role, "Delete", $module['name']);
+        }
+
         // Shows an existing record
         if ($module['link_field_value']) {
             $owner = auth()->user()->login_id;
+            $record_exists = $this->checkIfExists($module);
+
+            if (!$record_exists) {
+                Session::flash('success', false);
+                $message = 'No such record found';
+
+                return $this->sendResponse(404, $message);
+            }
 
             $data[$module['table_name']] = DB::table($module['table_name'])
                 ->select($module['table_name'] . '.*');
@@ -61,13 +75,14 @@ trait FormController
                     foreach ($role_permissions as $column_name => $column_value) {
                         if (is_array($column_value)) {
                             $data[$module['table_name']] = $data[$module['table_name']]
-                                ->whereIn($column_name, $column_value);
+                                ->whereIn($module['table_name'] . '.' . $column_name, $column_value);
                         } else {
                             $data[$module['table_name']] = $data[$module['table_name']]
-                                ->where($column_name, $column_value);
+                                ->where($module['table_name'] . '.' . $column_name, $column_value);
                         }
                     }
                 } else {
+                    Session::flash('success', false);
                     return $this->sendResponse(404, 'Page Not Found');
                 }
             }
@@ -78,8 +93,11 @@ trait FormController
                 foreach ($module['parent_foreign_map'] as $foreign_table => $foreign_details) {
                     $foreign_key = $foreign_details['foreign_key'];
                     $foreign_field = $foreign_details['fetch_field'];
+                    $foreign_field = explode(",", $foreign_field);
 
-                    array_push($fetch_fields, $foreign_field);
+                    foreach ($foreign_field as $field) {
+                        array_push($fetch_fields, trim($field));
+                    }
 
                     $data[$module['table_name']] = $data[$module['table_name']]
                         ->leftJoin($foreign_table, $module['table_name'].'.'.$foreign_key, '=', $foreign_table.'.id');
@@ -151,18 +169,16 @@ trait FormController
                     }
                 }
             } else {
+                Session::flash('success', false);
                 return $this->sendResponse(401, 'You are not authorized to view this record');
             }
         }
         // Shows a new form
         else {
-            if ($user_role != 'System Administrator') {
-                $can_create = $this->roleWiseModules($user_role, "Create", $module['name']);
-
-                if (!$can_create) {
-                    $message = 'You are not authorized to create "'. $module['display_name'] . '"';
-                    return $this->sendResponse(401, $message);
-                }
+            if (!$perms['create']) {
+                Session::flash('success', false);
+                $message = 'You are not authorized to create "'. $module['display_name'] . '"';
+                return $this->sendResponse(401, $message);
             }
         }
 
@@ -175,18 +191,18 @@ trait FormController
             'file' => $module['view'],
             'slug' => $module['slug'],
             'module' => $module['name'],
-            'table_name' => $module['table_name']
+            'table_name' => $module['table_name'],
+            'permissions' => $perms
         ];
 
         return $this->sendResponse(200, 'Ok', $form_data);
     }
 
-
     // Saves or Updates the record to the database
     public function saveDoc($request, $module)
     {
         $user_role = auth()->user()->role;
-        $record_exists = $this->checkIfAlreadyExist($request, $module);
+        $record_exists = $this->checkIfExists($module);
 
         if ($user_role == 'System Administrator') {
             if ($module['link_field_value'] && $record_exists) {
@@ -224,7 +240,6 @@ trait FormController
         return $result;
     }
 
-
     public function saveForm($request, $module, $action, $record_exists = null)
     {
         if ($action == "create" && isset($record_exists) && $record_exists) {
@@ -245,7 +260,7 @@ trait FormController
         }
 
         // if data is inserted into database then only save files, user, etc.
-        if ($form_data) {
+        if ($form_data && isset($form_data[$module['table_name']])) {
             Session::flash('success', true);
             $module['link_field_value'] = $this->link_field_value;
             $data = $form_data[$module['table_name']];
@@ -293,14 +308,6 @@ trait FormController
                 $this->userFormAction($request, $module['name'], $action, isset($data['avatar']) ? $data['avatar'] : "");
             }
 
-            // send email if come in email modules
-            if (in_array($module['name'], $this->email_modules)) {
-                if ($this->getAppSetting('email') == "Active") {
-                    $to = isset($data['email']) ? $data['email'] : $data['email_id'];
-                    $this->email(null, $to, null, $data, $module['name']);
-                }
-            }
-
             $form_view_data = [
                 'form_data' => isset($form_data) ? $form_data : [],
                 'link_field' => $module['link_field'],
@@ -322,7 +329,6 @@ trait FormController
             return $form_data;
         }
     }
-
 
     // insert or updates records into the database
     public function saveDataInDb($form_data, $module, $action)
@@ -391,17 +397,27 @@ trait FormController
                         if ($role_permissions) {
                             $unsatisfied_rule = [];
 
+                            $current_data = DB::table($form_table)
+                                ->where($module['link_field'], $form_data[$form_table][$module['link_field']])
+                                ->first();
+
                             foreach ($role_permissions as $column_name => $column_value) {
+                                if (isset($form_data[$form_table][$column_name]) && $form_data[$form_table][$column_name]) {
+                                    $data_value = $form_data[$form_table][$column_name];
+                                } else {
+                                    $data_value = $current_data->{$column_name};
+                                }
+
                                 if (is_array($column_value)) {
-                                    if (!in_array($form_data[$form_table][$column_name], $column_value)) {
+                                    if (!in_array($data_value, $column_value)) {
                                         $can_update = false;
-                                        $unsatisfied_rule[$column_name] = $form_data[$form_table][$column_name];
+                                        $unsatisfied_rule[$column_name] = $data_value;
                                         break;
                                     }
                                 } else {
-                                    if ($form_data[$form_table][$column_name] != $column_value) {
+                                    if ($data_value != $column_value) {
                                         $can_update = false;
-                                        $unsatisfied_rule[$column_name] = $form_data[$form_table][$column_name];
+                                        $unsatisfied_rule[$column_name] = $data_value;
                                         break;
                                     }
                                 }
@@ -445,9 +461,6 @@ trait FormController
                             unset($child_record['action']);
 
                             if (count($child_record)) {
-                                $child_record['owner'] = Session::get('login_id');
-                                $child_record['created_at'] = date('Y-m-d H:i:s');
-
                                 $result = DB::table($form_table)->insertGetId($child_record);
                                 $form_data[$form_table][$idx]['id'] = $result;
                             }
@@ -482,130 +495,138 @@ trait FormController
         }
     }
 
-
     // Delete the record from the database
     public function deleteDoc($request, $module, $email_id = null)
     {
         $user_role = auth()->user()->role;
+        $delete_allowed = true;
 
-        if ($user_role == 'System Administrator') {
+        if ($user_role != 'System Administrator') {
+            $delete_allowed = $this->roleWiseModules($user_role, "Delete", $module['name']);
+        }
+
+        if ($delete_allowed) {
             return $this->deleteRecord($request, $module, $email_id);
         } else {
-            $allowed = $this->roleWiseModules($user_role, "Delete", $module['name']);
+            Session::flash('success', false);
+            $message = 'You are not authorized to delete "'. $module['display_name'] . '" records';
 
-            if ($allowed) {
-                return $this->deleteRecord($request, $module, $email_id);
-            } else {
-                Session::flash('success', false);
-                $message = 'You are not authorized to delete "'. $module['display_name'] . '" records';
-
-                return $this->sendResponse(401, $message);
-            }
+            return $this->sendResponse(401, $message);
         }
     }
 
-
-    // Delete's record from database
+    // Delete record from database
     public function deleteRecord($request, $module, $email_id = null)
     {
         if ($module['link_field_value']) {
-            $data = DB::table($module['table_name'])
-                ->where($module['link_field'], $module['link_field_value']);
-
             $user_role = auth()->user()->role;
 
-            if ($user_role != 'System Administrator') {
-                $role_permissions = $this->moduleWisePermissions($user_role, "Delete", $module['name']);
+            $data = DB::table($module['table_name'])
+                ->where($module['link_field'], $module['link_field_value'])
+                ->first();
 
-                if ($role_permissions) {
-                    foreach ($role_permissions as $column_name => $column_value) {
-                        if (is_array($column_value)) {
-                            $data = $data->whereIn($column_name, $column_value);
-                        } else {
-                            $data = $data->where($column_name, $column_value);
+            if ($data) {
+                $can_delete = true;
+
+                if ($user_role != 'System Administrator') {
+                    $role_permissions = $this->moduleWisePermissions($user_role, "Delete", $module['name']);
+
+                    if ($role_permissions) {
+                        foreach ($role_permissions as $column_name => $column_value) {
+                            if (is_array($column_value)) {
+                                if (!in_array($data->{$column_name}, $column_value)) {
+                                    $can_delete = false;
+                                    break;
+                                }
+                            } else {
+                                if ($data->{$column_name} != $column_value) {
+                                    $can_delete = false;
+                                    break;
+                                }
+                            }
                         }
+                    } else {
+                        $can_delete = false;
+                    }
+                }
+
+                if ($can_delete) {
+                    $form_title = isset($module['form_title']) ? $data->{$module['form_title']} : $module['link_field_value'];
+
+                    if ($form_title) {
+                        // delete child tables if found
+                        if (isset($module['child_tables']) && isset($module['child_foreign_key'])) {
+                            foreach ($module['child_tables'] as $child_table) {
+                                DB::table($child_table)
+                                    ->where($module['child_foreign_key'], $module['link_field_value'])
+                                    ->delete();
+                            }
+                        }
+
+                        $result = DB::table($module['table_name'])
+                            ->where($module['link_field'], $module['link_field_value'])
+                            ->delete();
+
+                        // update activity
+                        $activity_data = [
+                            'module' => $module['display_name'],
+                            'icon' => $module['icon'],
+                            'user' => auth()->user()->full_name,
+                            'user_id' => auth()->user()->id,
+                            'login_id' => auth()->user()->login_id,
+                            'action' => 'Delete',
+                            'form_title' => $form_title,
+                            'form_id' => $module['link_field_value']
+                        ];
+
+                        $this->saveActivity($activity_data);
+
+                        // delete user if modules come under user_via_modules
+                        if (in_array($module['name'], $this->user_via_modules)) {
+                            if (isset($data->email_id) && $data->email_id) {
+                                $email_id = $data->email_id;
+                            } elseif (isset($data->email) && $data->email) {
+                                $email_id = $data->email;
+                            } else {
+                                $email_id = null;
+                            }
+
+                            $this->userFormAction($request, $module['name'], "delete", $data->avatar, $email_id);
+                        }
+
+                        $delete_data = [
+                            'form_data' => [$module['table_name'] => $data],
+                            'link_field' => $module['link_field'],
+                            'form_title' => isset($module['form_title']) ? $module['form_title'] : $module['link_field'],
+                            'title' => $module['display_name'],
+                            'icon' => $module['icon'],
+                            'file' => $module['view'],
+                            'module' => $module['name'],
+                            'table_name' => $module['table_name']
+                        ];
+
+                        Session::flash('success', true);
+                        $message = $module['display_name'] . ': "' . $form_title . '" deleted successfully';
+
+                        return $this->sendResponse(200, $message, $delete_data);
+                    } else {
+                        Session::flash('success', false);
+                        return $this->sendResponse(500, 'Oops! Some problem occured while deleting. Please try again');
+                    }
+
+                    // deletes the avatar file if any
+                    if (isset($data->avatar) && $data->avatar) {
+                        File::delete(public_path().$data->avatar);
                     }
                 } else {
-                    $form_title = isset($module['form_title']) ? $module['form_title'] : $module['link_field_value'];
+                    $form_title = isset($module['form_title']) ? $data->{$module['form_title']} : $data->{$module['link_field_value']};
                     $message = 'You are not authorized to delete "'. $form_title . '" record';
 
                     return $this->sendResponse(401, $message);
                 }
-            }
-
-            $data = $data->first();
-
-            if ($data) {
-                // if record found then only delete it
-                $form_title = isset($module['form_title']) ? $data->{$module['form_title']} : $module['link_field_value'];
-
-                if ($form_title) {
-                    // delete child tables if found
-                    if (isset($module['child_tables']) && isset($module['child_foreign_key'])) {
-                        foreach ($module['child_tables'] as $child_table) {
-                            DB::table($child_table)
-                                ->where($module['child_foreign_key'], $module['link_field_value'])
-                                ->delete();
-                        }
-                    }
-
-                    $result = DB::table($module['table_name'])
-                        ->where($module['link_field'], $module['link_field_value'])
-                        ->delete();
-
-                    // update activity
-                    $activity_data = [
-                        'module' => $module['display_name'],
-                        'icon' => $module['icon'],
-                        'user' => auth()->user()->full_name,
-                        'user_id' => auth()->user()->id,
-                        'login_id' => auth()->user()->login_id,
-                        'action' => 'Delete',
-                        'form_title' => $form_title
-                    ];
-
-                    $this->saveActivity($activity_data);
-
-                    // delete user if modules come under user_via_modules
-                    if (in_array($module['name'], $this->user_via_modules)) {
-                        if (isset($data->email_id) && $data->email_id) {
-                            $email_id = $data->email_id;
-                        } elseif (isset($data->email) && $data->email) {
-                            $email_id = $data->email;
-                        } else {
-                            $email_id = null;
-                        }
-
-                        $this->userFormAction($request, $module['name'], "delete", $data->avatar, $email_id);
-                    }
-
-                    $delete_data = [
-                        'form_data' => [$module['table_name'] => [$module['link_field'] => $module['link_field_value']]],
-                        'link_field' => $module['link_field'],
-                        'form_title' => isset($module['form_title']) ? $module['form_title'] : $module['link_field'],
-                        'title' => $module['display_name'],
-                        'icon' => $module['icon'],
-                        'file' => $module['view'],
-                        'module' => $module['name'],
-                        'table_name' => $module['table_name']
-                    ];
-
-                    Session::flash('success', true);
-                    $message = $module['display_name'] . ': "' . $form_title . '" deleted successfully';
-
-                    return $this->sendResponse(200, $message, $delete_data);
-                } else {
-                    Session::flash('success', false);
-                    return $this->sendResponse(500, 'Oops! Some problem occured while deleting. Please try again');
-                }
-
-                // deletes the avatar file if any
-                if (isset($data->avatar) && $data->avatar) {
-                    File::delete(public_path().$data->avatar);
-                }
             } else {
                 Session::flash('success', false);
-                return $this->sendResponse(404, 'No record(s) found with the given data');
+                return $this->sendResponse(404, 'No such record found');
             }
         } else {
             Session::flash('success', false);
@@ -615,13 +636,16 @@ trait FormController
         }
     }
 
-
     // Returns the array of data from request with some common data
     public function populateData($request, $module, $action = null)
     {
         $form_data = $request->all();
         $parent_foreign_keys = [];
         unset($form_data["_token"]);
+
+        if (isset($form_data['password']) && $form_data['password']) {
+            $form_data['password'] = bcrypt($form_data['password']);
+        }
 
         if (isset($module['parent_foreign_map']) && count($module['parent_foreign_map'])) {
             foreach ($module['parent_foreign_map'] as $foreign_table => $details) {
@@ -669,18 +693,18 @@ trait FormController
         }
 
         // get the table schema
-        $table_schema = $this->getTableSchema($module['table_name']);
+        $table_schema = $this->getTableSchema($module['table_name'], true);
 
         foreach ($form_data as $column => $value) {
-            if (isset($table_schema[$column]) && $table_schema[$column] == "date" && $value) {
+            if (isset($table_schema[$column]) && $table_schema[$column]['datatype'] == "date" && $value) {
                 $value = date('Y-m-d', strtotime($value));
-            } elseif (isset($table_schema[$column]) && $table_schema[$column] == "datetime" && $value) {
+            } elseif (isset($table_schema[$column]) && $table_schema[$column]['datatype'] == "datetime" && $value) {
                 $value = date('Y-m-d H:i:s', strtotime($value));
-            } elseif (isset($table_schema[$column]) && $table_schema[$column] == "time" && $value) {
+            } elseif (isset($table_schema[$column]) && $table_schema[$column]['datatype'] == "time" && $value) {
                 $value = date('H:i:s', strtotime($value));
             } elseif (!is_array($value) && $value && isset($table_schema[$column])) {
                 // checking is array is important to eliminate convert type for child tables
-                $this->convertDataType($value, $table_schema[$column]);
+                $this->convertDataType($value, $table_schema[$column]['datatype']);
             }
 
             if ($value) {
@@ -691,9 +715,18 @@ trait FormController
                 }
             } else {
                 if ($parent_foreign_keys && count($parent_foreign_keys) && isset($parent_foreign_keys[$column])) {
-                    unset($data[$module['table_name']][$column]);
-                } elseif (isset($table_schema[$column]) && $table_schema[$column] == "boolean") {
+                    if (isset($table_schema[$column])) {
+                        if ($table_schema[$column]['nullable']) {
+                            $data[$module['table_name']][$column] = null;
+                        } else {
+                            unset($data[$module['table_name']][$column]);
+                        }
+                    } else {
+                        unset($data[$module['table_name']][$column]);
+                    }
+                } elseif (isset($table_schema[$column]) && $table_schema[$column]['datatype'] == "boolean") {
                     $value = 0;
+                    $data[$module['table_name']][$column] = $value;
                 } else {
                     if ($module['link_field_value'] && isset($table_schema[$column])) {
                         $data[$module['table_name']][$column] = null;
@@ -702,12 +735,10 @@ trait FormController
             }
         }
 
-
         $data = $this->mergeCommonData($data, $module, $action);
         // web_dump($data);
         return $data;
     }
-
 
     // converts the type of request value to the type to be inserted in db
     public function convertDataType($value, $type_name)
@@ -720,7 +751,6 @@ trait FormController
 
         settype($value, $type_name);
     }
-
 
     // Returns the array of data from request with some common data and child data
     public function mergeCommonData($data, $module, $action = null)
@@ -808,7 +838,7 @@ trait FormController
                             $data[$table][$index]['last_updated_by'] = $last_updated_by;
                             $data[$table][$index]['updated_at'] = $updated_at;
 
-                            if ($action == "create") {
+                            if ($child_record['action'] == "create") {
                                 $data[$table][$index]['owner'] = $owner;
                                 $data[$table][$index]['created_at'] = $created_at;
                             }
@@ -820,7 +850,6 @@ trait FormController
 
         return $data;
     }
-
 
     // performs form actions for user table
     public function userFormAction($request, $module, $action, $user_avatar = null, $email_id = null)
@@ -894,7 +923,6 @@ trait FormController
         return $result;
     }
 
-
     // creates file name
     public function createFilePath($upload_file, $folder, $index)
     {
@@ -909,38 +937,20 @@ trait FormController
         return $file_full_path;
     }
 
-
     // checks for an existing record in the database
-    public function checkIfAlreadyExist($request, $module)
+    public function checkIfExists($module)
     {
         $existing_record = false;
 
-        if ($request->get($module['link_field'])) {
+        if ($module['link_field_value']) {
             $existing_record = DB::table($module['table_name'])
-                ->where($module['link_field'], $request->get($module['link_field']))
+                ->select($module['link_field'], $module['form_title'])
+                ->where($module['link_field'], $module['link_field_value'])
                 ->first();
         }
 
         return $existing_record ? true : false;
     }
-
-
-    // returns table column name and column type
-    public function getTableSchema($table)
-    {
-        $columns = DB::connection()
-            ->getDoctrineSchemaManager()
-            ->listTableColumns($table);
-
-        $table_schema = [];
-
-        foreach($columns as $column) {
-            $table_schema[$column->getName()] = $column->getType()->getName();
-        }
-
-        return $table_schema;
-    }
-
 
     // send json response based on http status code
     public function sendResponse($status_code, $message, $data = null)

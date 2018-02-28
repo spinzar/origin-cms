@@ -14,12 +14,19 @@ use Faker\Generator as Faker;
 */
 
 $factory->define(App\User::class, function (Faker $faker) {
-    static $password;
+    $roles = ['Administrator', 'Guest']; // dummy roles
+    $status = ['1', '0'];
 
     return [
-        'name' => $faker->name,
-        'email' => $faker->unique()->safeEmail,
-        'password' => $password ?: $password = bcrypt('secret'),
+        'full_name' => $faker->name,
+        'login_id' => $faker->unique()->userName,
+        'email' => $faker->unique()->email,
+        'password' => bcrypt(str_random(10)),
         'remember_token' => str_random(10),
+        'role' => $roles[array_rand($roles)],
+        'language' => 'en',
+        'is_active' => $status[array_rand($status)],
+        'owner' => 'admin',
+        'last_updated_by' => 'admin',
     ];
 });

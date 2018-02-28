@@ -1,20 +1,17 @@
 var mandatory_fields = get_mandatory_fields();
 
 $( document ).ready(function() {
-
 	// if form has been changed then enable form save button
-	$('form').on('change input', 'input, select, textarea', function() {
+	$('form#' + origin.slug).on('change input', 'input, select, textarea', function() {
 		change_doc();
 	});
 
-
 	// show images files
-	$("form").on("change", "input[type='file']", function() {
+	$('form#' + origin.slug).on("change", "input[type='file']", function() {
 		if ($(this).val()) {
 			read_image(this);
 		}
 	});
-
 
 	// shows msgbox to delete the record permanently
 	$("#delete").on("click", function() {
@@ -23,9 +20,7 @@ $( document ).ready(function() {
 		var delete_path = current_url.replace("/" + link_field_value, "/delete/" + link_field_value);
 
 		var footer = '<span class="pull-right">\
-			<button class="btn btn-white btn-sm" data-dismiss="modal">\
-				Cancel\
-			</button>\
+			<button type="button" class="btn btn-sm" data-dismiss="modal">No</button>\
 			<a class="btn btn-danger btn-sm" href="' + delete_path + '" id="yes" name="yes">\
 				Delete\
 			</a>\
@@ -43,26 +38,72 @@ $( document ).ready(function() {
 	initialize_mandatory_fields();
 	enable_autocomplete();
 
+	if (!origin.permissions.update) {
+		$form_elements = $("form").find("input, select, textarea");
+
+		$.each($form_elements, function(index, element) {
+			var ele_type = $(element).attr("type");
+
+			if (!["hidden", "file"].contains(ele_type)) {
+				var new_control = '';
+
+				if (ele_type == "checkbox") {
+					if ($(element).is(":checked")) {
+						new_control = '<i class="fa fa-check-square-o"></i>';
+					}
+					else {
+						new_control = '<i class="fa fa-square-o"></i>';
+					}
+				}
+				else {
+					var ele_val = $(element).val();
+
+					if ($(element).attr("name") == "is_active") {
+						ele_val = parseInt(ele_val) ? "Yes" : "No";
+					}
+
+					new_control = '<p class="form-control-static origin-static">' + ele_val + '</p>';
+				}
+
+				$(new_control).insertBefore($(element));
+			}
+
+			if ($(element).attr("type") == "file") {
+				$(element).closest('.btn').remove();
+			}
+
+			$(element).remove();
+		});
+
+		// hide remove row & add new row buttons from child tables
+		$.each($('table'), function(idx, tbl) {
+			$(tbl).find('th.remove').remove();
+			$(tbl).find('.remove-row').closest('td').remove();
+			$(tbl).find('.new-row').closest('tr').remove();
+		});
+	}
+
 	// validate forms for mandatory fields
-	$("form").submit(function( event ) {
+	$('form#' + origin.slug).submit(function(e) {
 		var validated = true;
 
 		$.each(mandatory_fields, function(index, field) {
 			if (!trim($(field).val())) {
-				msg = "Please Enter " + $(field).attr("id").replace("_", " ").toProperCase();
+				msg = "Please Enter " + $(field).attr("name").replace("_", " ").toProperCase();
 				notify(msg, "error");
-				event.preventDefault();
+				e.preventDefault();
 				validated = false;
-				$("#" + $(field).attr("id")).focus();
+				$(field).focus();
 				return false;
 			}
 		});
 
 		if (validated) {
 			// checkbox toggle value
-			$.each($("form").find("input[type='checkbox']"), function(idx, checkbox) {
+			$.each($('form#' + origin.slug).find("input[type='checkbox']"), function(idx, checkbox) {
 				if (this.checked) {
 					$(this).val("1");
+					$(this).closest('.checkbox-value').prop("disabled", true);
 				}
 				else {
 					$(this).val("0");
@@ -74,7 +115,6 @@ $( document ).ready(function() {
 	});
 });
 
-
 // calls required functions for changing doc state
 function change_doc() {
 	origin.changed = true;
@@ -85,7 +125,6 @@ function change_doc() {
 
 // get all mandatory fields and highlight
 function initialize_mandatory_fields () {
-	// get all mandatory fields in form
 	mandatory_fields = get_mandatory_fields();
 	highlight_mandatory_fields(mandatory_fields);
 }
@@ -95,6 +134,7 @@ function initialize_mandatory_fields () {
 function get_mandatory_fields() {
 	var mandatory_fields = [];
 	$form_elements = $("form").find("input, select, textarea");
+
 	$.each($form_elements, function(index, element) {
 		if ($(this).data("mandatory") == "yes") {
 			mandatory_fields.push($(element)[0]);
@@ -104,12 +144,12 @@ function get_mandatory_fields() {
 	return mandatory_fields;
 }
 
-
 // show error label and input to all mandatory fields
 function highlight_mandatory_fields(mandatory_fields) {
 	if (!mandatory_fields) {
 		mandatory_fields = get_mandatory_fields();
 	}
+
 	$.each(mandatory_fields, function(index, field) {
 		if ($.trim($(this).val()) == "") {
 			$(field).closest(".form-group").addClass("has-error");
@@ -133,15 +173,14 @@ function remove_mandatory_highlight(mandatory_fields) {
 	});
 }
 
-
 // enable save button
 function enable_save_button() {
 	form_changed = true;
 	$("#save_form").removeClass("disabled");
+	$("#save_form").prop("disabled", false);
 	$("#form-stats > i").removeClass("text-success").addClass("text-warning");
 	$("#form-status").html('<b>Not Saved</b>');
 }
-
 
 // show image files locally with uploading
 function read_image(input) {
@@ -155,7 +194,6 @@ function read_image(input) {
 		reader.readAsDataURL(input.files[0]);
 	}
 }
-
 
 // set data to form
 function set_doc_data() {
@@ -192,6 +230,11 @@ function set_doc_data() {
 		$(".text-editor, .text-editor-advanced").each(function(idx, field) {
 			$(field).trumbowyg('html', $(field).val());
 		});
+
+		if (!origin.permissions.update) {
+			$("body").find('.text-editor, .text-editor-advanced').trumbowyg('disable');
+			$("body").find('.text-editor, .text-editor-advanced').remove();
+		}
 	}
 }
 
@@ -233,22 +276,3 @@ window.origin.make = {
 		}
 	}
 };
-
-
-function sticky_relocate() {
-	var window_top = $(window).scrollTop();
-	var div_top = $('#sticky-anchor').offset().top;
-
-	if (window_top > div_top) {
-		$('#sticky').addClass('stick');
-		$('#sticky-anchor').height($('#sticky').outerHeight());
-	} else {
-		$('#sticky').removeClass('stick');
-		$('#sticky-anchor').height(0);
-	}
-}
-
-$(function() {
-	$(window).scroll(sticky_relocate);
-	sticky_relocate();
-});

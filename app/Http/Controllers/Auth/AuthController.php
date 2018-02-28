@@ -52,7 +52,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     // functions to be performed after successful login of user
     public function afterSuccessLogin()
     {
@@ -71,7 +70,6 @@ class AuthController extends Controller
         return redirect()->route('home');
     }
 
-
     /**
      * Log the user out of the application.
      *
@@ -79,22 +77,24 @@ class AuthController extends Controller
      */
     public function getLogout(Request $request)
     {
-        $activity_data = [
-            'module' => 'Auth',
-            'icon' => 'fa fa-sign-out',
-            'user' => auth()->user()->full_name,
-            'user_id' => auth()->user()->id,
-            'login_id' => auth()->user()->login_id,
-            'action' => "Logout",
-        ];
+        if (auth()->user()) {
+            $activity_data = [
+                'module' => 'Auth',
+                'icon' => 'fa fa-sign-out',
+                'user' => auth()->user()->full_name,
+                'user_id' => auth()->user()->id,
+                'login_id' => auth()->user()->login_id,
+                'action' => "Logout"
+            ];
 
-        $this->saveActivity($activity_data);
+            $this->saveActivity($activity_data);
+        }
+
         Auth::logout();
         Session::flush();
 
         return redirect()->route('show.app.login');
     }
-
 
     /**
      * Redirect the user to the Social authentication page.
@@ -105,7 +105,6 @@ class AuthController extends Controller
     {
         return Socialite::driver($driver)->redirect();
     }
-
 
     // handles social login
     public function handleProviderCallback($driver)
@@ -118,14 +117,13 @@ class AuthController extends Controller
 
         $common_defaults = $this->getSocialUserData('default');
         $social_defaults = $this->getSocialUserData($driver);
-        $user_details = $this->populateUserData($common_defaults, $social_defaults, $user_profile, $driver);
+        $user_details = $this->populateSocialUserData($common_defaults, $social_defaults, $user_profile, $driver);
 
         return $user_details;
     }
 
-
     // create user data with defaults and social defaults
-    private function populateUserData($common_defaults, $social_defaults, $user_profile, $driver)
+    private function populateSocialUserData($common_defaults, $social_defaults, $user_profile, $driver)
     {
         $user_details = [];
 
@@ -153,7 +151,6 @@ class AuthController extends Controller
 
         return $user_details;
     }
-
 
     // User data keys according to driver
     private function getSocialUserData($driver)

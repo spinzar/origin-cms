@@ -39,14 +39,12 @@
                     <span>Reports</span>
                 </a>
             </li>
-            @if (in_array(auth()->user()->role, ["System Administrator", "Administrator"]))
-                <li class="treeview" title="Activities">
-                    <a href="{{ route('show.app.activities') }}">
-                        <i class="fa fa-bell"></i>
-                        <span>Activities</span>
-                    </a>
-                </li>
-            @endif
+            <li class="treeview" title="Activities">
+                <a href="{{ route('show.app.activities') }}">
+                    <i class="fa fa-bell"></i>
+                    <span>Activities</span>
+                </a>
+            </li>
             <li class="treeview" title="Settings">
                 <a href="{{ route('show.app.settings') }}">
                     <i class="fa fa-cogs"></i>

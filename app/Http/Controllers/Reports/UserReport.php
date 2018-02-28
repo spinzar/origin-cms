@@ -12,7 +12,7 @@ use App\Http\Controllers\Controller;
 class UserReport extends Controller
 {
     // get all rows & colummns for report
-    public function getData($request, $per_page, $filters_applied, $download)
+    public function getData($request, $per_page, $download)
     {
         $user_table_name = Cache::get('app_modules')['User']['table_name'];
 
@@ -37,15 +37,13 @@ class UserReport extends Controller
                 $query = $query->where('created_at', '>=', date('Y-m-d H:i:s', strtotime($filters['from_date'])))
                     ->where('created_at', '<=', date('Y-m-d H:i:s', strtotime($filters['to_date'])));
             }
-
-            $filters_applied = true;
         }
 
         if (!in_array(auth()->user()->role, ["System Administrator", "Administrator"])) {
             $query = $query->where('login_id', auth()->user()->login_id);
         }
 
-        if ($download || $filters_applied) {
+        if ($download) {
             $rows = $query->orderBy('id', 'desc')->get();
         } else {
             $rows = $query->orderBy('id', 'desc')->paginate($per_page);

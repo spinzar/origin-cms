@@ -15,7 +15,7 @@ trait PermController
     public $modules = [];
 
     // restrict data to this roles
-    public $roles = ['Administrator'];
+    public $roles = ['Administrator', 'Guest'];
 
     // set module actions
     public $actions = ['Read', 'Create', 'Update', 'Delete'];
@@ -25,7 +25,6 @@ trait PermController
 
     // define modules wise permissions to roles
     public $module_permissions_based_on_role;
-
 
     // list all the modules of the roles based on permissions
     public function roleWiseModules($role = null, $action = null, $module = null)
@@ -38,6 +37,10 @@ trait PermController
                 'Create' => array_values(array_diff($this->modules, ['Module'])), 
                 'Update' => array_values(array_diff($this->modules, ['Module'])), 
                 'Delete' => array_values(array_diff($this->modules, ['Module']))
+            ],
+            'Guest' => [
+                'Read' => ['User'],
+                'Update' => ['User']
             ],
         ];
 
@@ -58,12 +61,12 @@ trait PermController
         }
     }
 
-
     // gets the data related to the role
     public function moduleWisePermissions($role = null, $action = null, $module_name = null)
     {
         $this->modules = array_keys($this->getAppModules());
         $user_login_id = auth()->user()->login_id;
+        $user_id = auth()->user()->id;
 
         $this->module_permissions_based_on_role = [
             'Administrator' => [
@@ -71,6 +74,20 @@ trait PermController
                 'Update' => [], 
                 'Create' => [], 
                 'Delete' => []
+            ],
+            'Guest' => [
+                'Read' => [
+                    'User' => [
+                        'login_id' => $user_login_id
+                    ]
+                ],
+                'Update' => [
+                    'User' => [
+                        'id' => $user_id,
+                        'login_id' => $user_login_id,
+                        'role' => 'Guest'
+                    ]
+                ]
             ],
         ];
 

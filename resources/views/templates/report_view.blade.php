@@ -20,7 +20,7 @@
                         <i class="fa fa-download"></i> Download
                     </a>
                     @if (view()->exists('layouts/reports/' . strtolower(str_replace(" ", "_", $title))))
-                        <a class="btn btn-primary btn-sm" id="refresh_report" name="refresh_report"
+                        <a class="btn btn-primary btn-sm" id="filter_report" name="refresh_report"
                             data-toggle="tooltip" data-placement="bottom" data-container="body" title="Filter Report">
                             <i class="fa fa-filter"></i> Filter
                         </a>
@@ -48,13 +48,7 @@
                 </thead>
                 <tbody></tbody>
             </table>
-            <div class="data-loader" style="display: none;">Fetching Data...</div>
-        </div>
-        <div class="box-footer clearfix">
-            <strong>
-                Total : <span class="badge" id="item-count">{{ $count }}</span>
-                {{ (isset($module) && $module) ? awesome_case($module) : 'item' }}(s)
-            </strong>
+            <div class="data-loader" style="display: none;">Loading...</div>
         </div>
     </div>
 @endsection

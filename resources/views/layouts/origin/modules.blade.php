@@ -11,14 +11,16 @@
     @endif
         @foreach ($data as $module)
             <div class="col-lg-2 col-md-3 col-xs-6 text-center m-b app-module" data-name="{{ $module['name'] }}">
-                <a class="module-btn" data-href="{{ route('show.list', $module['slug']) }}" style="background-color: {{ $module['bg_color'] }}; box-shadow: inset 0px 0px 0px {{ $module['bg_color'] }}, 0px 5px 0px 0px {{ $module['bg_color'] }}, 0px 10px 5px #999999; border-color: {{ $module['bg_color'] }};" title="{{ $module['display_name'] }}">
-                    <i class="{{ $module['icon'] }}" style="color: {{ $module['icon_color'] }};"></i>
-                </a>
-                <h3 class="module-label">
-                    <a href="{{ route('show.list', $module['slug']) }}">
-                        {{ $module['display_name'] }}
+                <div class="module-config" id="{{ $module['slug'] }}">
+                    <a class="module-btn" href="{{ route('show.list', $module['slug']) }}" style="background-color: {{ $module['bg_color'] }}; box-shadow: inset 0px 0px 0px {{ $module['bg_color'] }}, 0px 5px 0px 0px {{ $module['bg_color'] }}, 0px 10px 5px #999999; border-color: {{ $module['bg_color'] }};" title="{{ $module['display_name'] }}">
+                        <i class="{{ $module['icon'] }}" style="color: {{ $module['icon_color'] }};"></i>
                     </a>
-                </h3>
+                    <h3 class="module-label">
+                        <a href="{{ route('show.list', $module['slug']) }}">
+                            {{ $module['display_name'] }}
+                        </a>
+                    </h3>
+                </div>
             </div>
         @endforeach
     </div>
