@@ -73,6 +73,10 @@
 	opacity: 0.9;
 	filter: alpha(opacity=90); /* For IE8 and earlier */
 }
+.btn-white {
+	background: #fff;
+	border: 1px solid #ddd;
+}
 
 /* Back to top */
 a.back-to-top {
@@ -245,7 +249,7 @@ a.back-to-top:hover {
 }
 
 .module-label, .module-label a {
-	font-size: 14px;
+	font-size: 16px;
 	margin-top: 0px;
 	font-weight: 600;
 	margin-bottom: 10px;
@@ -704,9 +708,9 @@ a.back-to-top:hover {
 	}
 
 	.module-label, .module-label a {
-		font-size: 12px;
+		font-size: 14px;
 		margin-top: 0px;
-		font-weight: 500;
+		font-weight: 600;
 		margin-bottom: 5px;
 		text-align: center;
 		line-height: 1;
