@@ -18,7 +18,7 @@
                         @if (isset($form_data[$table_name]['avatar']) && $form_data[$table_name]['avatar'])
                             <img src="{{ $form_data[$table_name]['avatar'] }}" alt="{{ $form_data[$table_name]['full_name'] }}">
                         @else
-                            <i class="fa fa-picture-o inline fa-2x avatar"></i>
+                            <i class="fa fa-picture-o fa-2x avatar"></i>
                         @endif
                         </div>
                         <div class="media-body">
@@ -51,6 +51,14 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Email</label>
+                    <div>
+                        <input type="text" name="email" id="email" class="form-control" data-mandatory="yes" autocomplete="off">
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-6">
@@ -61,14 +69,16 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="control-label">Email</label>
-                    <div>
-                        <input type="text" name="email" id="email" class="form-control" data-mandatory="yes" autocomplete="off">
+            @if (!isset($form_data[$table_name]['id']))
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Password</label>
+                        <div>
+                            <input type="password" name="password" class="form-control" data-mandatory="yes" autocomplete="off">
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
         <div class="row">
             <div class="col-md-6">

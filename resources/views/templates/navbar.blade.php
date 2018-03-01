@@ -17,7 +17,7 @@
                         @if (auth()->user()->avatar)
                             <img alt="{{ auth()->user()->full_name }}" class="user-image" src="{{ url(auth()->user()->avatar) }}" title="{{ auth()->user()->full_name }}" />
                         @else
-                            <img class="user-image" />
+                            <img class="user-image default" />
                         @endif
                         <span class="hidden-xs">{{ auth()->user()->full_name }}</span>
                     </a>
@@ -26,7 +26,7 @@
                             @if (auth()->user()->avatar)
                                 <img alt="{{ auth()->user()->full_name }}" class="img-circle" src="{{ url(auth()->user()->avatar) }}" title="{{ auth()->user()->full_name }}" />
                             @else
-                                <img alt="{{ auth()->user()->full_name }}" class="img-circle" src="" title="{{ auth()->user()->full_name }}" />
+                                <img class="img-circle default" />
                             @endif
                             <p>
                                 {{ auth()->user()->full_name }} - {{ auth()->user()->role }}
