@@ -20,7 +20,7 @@
             @include('templates.vertical_nav')
             <!-- Body -->
             <div class="content-wrapper">
-                @yield('breadcrumb')
+                @yield('title_section')
                 <section class="content">
                     @yield('body')
                 </section>

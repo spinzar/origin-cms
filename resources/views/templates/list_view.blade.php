@@ -4,52 +4,55 @@
 @section('search', $module['display_name'] . ' List')
 
 @section('breadcrumb')
-    <section class="content-header">
-        <h1>&nbsp;</h1>
-        <ol class="breadcrumb app-breadcrumb">
-            <li>
-                <a href="{{ route('show.app.modules') }}">Home</a>
-            </li>
-            <li class="active">
-                <strong>{{ $module['display_name'] }}</strong>
-            </li>
-        </ol>
+    <ol class="breadcrumb app-breadcrumb">
+        <li>
+            <a href="{{ route('show.app.modules') }}"><strong>Home</strong></a>
+        </li>
+        <li class="active">
+            {{ $module['display_name'] }}
+        </li>
+    </ol>
+@endsection
+
+@section('title_section')
+    <div id="sticky-anchor"></div>
+    <section class="content-header title-section" id="sticky">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-xs-8">
+                <div class="form-name">
+                    <i class="fa fa-list"></i> {{ $module['display_name'] }} List
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-6 col-xs-4 text-right">
+                <button class="btn btn-success btn-sm refresh-list-view" data-toggle="tooltip" 
+                    data-placement="bottom" data-container="body" title="Refresh">
+                    <span class="hidden-xs">Refresh</span>
+                    <span class="visible-xs"><i class="fa fa-refresh"></i></span>
+                </button>
+
+                @if ($can_create)
+                    <a href="{{ route('new.doc', $module['slug']) }}" class="btn btn-primary btn-sm new-form"
+                        data-toggle="tooltip" data-placement="bottom" data-container="body" title="New {{ $module['display_name'] }}">
+                        <span class="hidden-xs">New</span>
+                        <span class="visible-xs"><i class="fa fa-plus"></i></span>
+                    </a>
+                @endif
+
+                @if ($can_delete)
+                    <button class="btn btn-danger btn-sm delete-selected" style="display: none;"
+                        data-toggle="tooltip" data-placement="bottom" data-container="body" title="Delete selected records">
+                        <span class="hidden-xs">Delete</span>
+                        <span class="visible-xs"><i class="fa fa-trash"></i></span>
+                    </button>
+                @endif
+            </div>
+        </div>
     </section>
 @endsection
 
 @section('body')
     <div class="box">
-        <div class="box-header with-border">
-            <h3 class="box-title">
-                <i class="fa fa-list"></i> {{ $module['display_name'] }} List
-            </h3>
-            <div class="box-tools">
-                <ul class="no-margin pull-right">
-                    <button class="btn btn-success btn-sm refresh-list-view" data-toggle="tooltip" 
-                        data-placement="bottom" data-container="body" title="Refresh">
-                        <span class="hidden-xs">Refresh</span>
-                        <span class="visible-xs"><i class="fa fa-refresh"></i></span>
-                    </button>
-
-                    @if ($can_create)
-                        <a href="{{ route('new.doc', $module['slug']) }}" class="btn btn-primary btn-sm new-form"
-                            data-toggle="tooltip" data-placement="bottom" data-container="body" title="New {{ $module['display_name'] }}">
-                            <span class="hidden-xs">New</span>
-                            <span class="visible-xs"><i class="fa fa-plus"></i></span>
-                        </a>
-                    @endif
-
-                    @if ($can_delete)
-                        <button class="btn btn-danger btn-sm delete-selected" style="display: none;"
-                            data-toggle="tooltip" data-placement="bottom" data-container="body" title="Delete selected records">
-                            <span class="hidden-xs">Delete</span>
-                            <span class="visible-xs"><i class="fa fa-trash"></i></span>
-                        </button>
-                    @endif
-                </ul>
-            </div>
-        </div>
-        <div class="box-body list-actions">
+        <div class="box-header list-actions">
             <div class="row">
                 <div class="col-md-9 col-sm-6 col-xs-6">
                     <button class="btn btn-sm" id="add-filter">Add Filter</button>
@@ -86,7 +89,7 @@
                 </div>
             </div>
         </div>
-        <div class="box-body list-column-filters" data-filter-no="1" style="display: none;">
+        <div class="box-header brd-top list-column-filters" data-filter-no="1" style="display: none;">
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
@@ -138,7 +141,7 @@
         <div class="box-body no-padding table-responsive list-content">
             <div class="record-selected-count" style="display: none;"></div>
             <table class="table table-hover list-view" data-module="{{ $module['name'] }}">
-                <thead class="panel-heading text-small">
+                <thead>
                     <tr class="list-header">
                         @if ($can_delete)
                             <th width="10%" data-field-name="row_check" class="list-checkbox" valign="middle">

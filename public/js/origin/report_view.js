@@ -44,12 +44,15 @@ $( document ).ready(function() {
 	});
 
 	// refresh grid view if record length is changed
-	$('[name="report-table_length"]').on("change", function() {
+	$('body').on('change', '[name="report-table_length"]', function() {
 		refresh_grid_view(current_page);
 	});
 
+	var search_box = $('body').find('#report-table_filter');
+	search_box = $(search_box).find('input[type="search"]');
+
 	// refresh grid view if search is changed
-	$('#report-table_filter').find('input[type="search"]').on("input change", function() {
+	$('body').on('input change', search_box, function() {
 		if ($(this).val() == "") {
 			current_page = 1;
 			refresh_grid_view(current_page);
@@ -174,6 +177,15 @@ $( document ).ready(function() {
 		$('table#report-table').find('thead').empty().append(headers);
 
 		report_table = $('table#report-table').DataTable({
+			"bProcessing": true,
+			"sDom": "<'row report-actions'<'col-sm-6 p-l-none'l><'col-sm-6 p-r-none'f>r>t<'row report-pagination'<'col-sm-5 p-l-none'i><'col-sm-7 p-r-none'p>>",
+			"iDisplayLength": 50,
+			"sPaginationType": "full_numbers",
+			"bAutoWidth": false,
+			"oLanguage": {
+				"sEmptyTable": "No Data",
+				"sProcessing": '<div class="text-center">Processing...</div>'
+			},
 			"scrollY": 375,
 			"scrollX": true,
 		});

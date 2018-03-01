@@ -9,6 +9,7 @@
         <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
             <span class="sr-only">Toggle navigation</span>
         </a>
+        @yield('breadcrumb')
         <div class="navbar-custom-menu">
             <ul class="nav navbar-nav">
                 <li class="dropdown user user-menu">
@@ -51,11 +52,6 @@
                             </div>
                         </li>
                     </ul>
-                </li>
-                <li>
-                    <a href="{{ route('show.app.settings') }}">
-                        <i class="fa fa-gears"></i>
-                    </a>
                 </li>
             </ul>
         </div>
