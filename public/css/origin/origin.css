@@ -86,6 +86,10 @@
 	border: 1px solid #ddd;
 }
 
+.fw-600 {
+	font-weight: 600;
+}
+
 /* Back to top */
 a.back-to-top {
 	display: none;

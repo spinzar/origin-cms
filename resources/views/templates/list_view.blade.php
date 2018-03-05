@@ -62,8 +62,8 @@
                     <div class="dropdown list-dropdown-field">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear">
-                                <span class="text-muted text-xs block" id="sort-field" data-value="{{ $module['sort_field'] }}">
-                                    {{ awesome_case($module['sort_field']) }}
+                                <span class="text-muted text-xs block fw-600" id="sort-field" data-value="{{ $module['sort_field'] }}">
+                                    {{ str_replace("Id", "ID", awesome_case($module['sort_field'])) }}
                                 </span>
                             </span>
                         </a>
@@ -72,7 +72,7 @@
                                 @if (!in_array($column_name, ['avatar', 'password', 'remember_token']))
                                     <li>
                                         <a class="sort-list-by-name" data-value="{{ $column_name }}">
-                                            {{ awesome_case($column_name) }}
+                                            {{ str_replace("Id", "ID", awesome_case($column_name)) }}
                                         </a>
                                     </li>
                                 @endif
@@ -97,7 +97,7 @@
                             @foreach($table_columns as $column_name => $column_type)
                                 @if (!in_array($column_name, ['avatar', 'password', 'remember_token']))
                                     <option value="{{ $column_name }}" data-type="{{ $column_type }}">
-                                        {{ awesome_case($column_name) }}
+                                        {{ str_replace("Id", "ID", awesome_case($column_name)) }}
                                     </option>
                                 @endif
                             @endforeach

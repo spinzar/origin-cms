@@ -396,12 +396,10 @@ $( document ).ready(function() {
 		var filter_sec = $('body').find('.list-column-filters');
 		var column_name = $(filter_sec).find('[name="column_name"] option:first').val();
 		var column_operator = $(filter_sec).find('[name="column_operator"] option:first').val();
-		var value_container = $(filter_sec).find('.column-value-container');
-		var new_input = '<input type="text" name="column_value" class="form-control" autocomplete="off">';
 
 		$(filter_sec).find('[name="column_name"]').val(column_name);
 		$(filter_sec).find('[name="column_operator"]').val(column_operator);
-		$(value_container).empty().append(new_input);
+		$('.list-column-filters').find('[name="column_name"]').trigger("change");
 	}
 
 	$(window).on('hashchange', function() {

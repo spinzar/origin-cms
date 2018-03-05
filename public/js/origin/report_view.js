@@ -161,13 +161,9 @@ $( document ).ready(function() {
 			<th>#</th>';
 
 		$.each(columns, function(idx, column) {
-			if (column == "id") {
-				var label = "ID";
-			}
-			else {
-				var label = column.replace(/_/g, " ");
-				label = label.replace("id", "ID").toProperCase();
-			}
+			var label = column.replace(/_/g, " ");
+			label = label.toProperCase();
+			label = label.replace("Id", "ID");
 
 			headers += '<th name="' + column + '">' + label + '</th>';
 		});
