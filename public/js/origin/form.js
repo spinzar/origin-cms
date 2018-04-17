@@ -1,6 +1,8 @@
 var mandatory_fields = get_mandatory_fields();
 
 $( document ).ready(function() {
+	var disable_fields = false;
+
 	// if form has been changed then enable form save button
 	$('form#' + origin.slug).on('change input', 'input, select, textarea', function() {
 		change_doc();
@@ -38,7 +40,19 @@ $( document ).ready(function() {
 	initialize_mandatory_fields();
 	enable_autocomplete();
 
-	if (!origin.permissions.update) {
+	var form_id = $('[name="id"]').val();
+
+	if (form_id) {
+		if (!origin.permissions.update) {
+			disable_fields = true;
+		}
+	} else {
+		if (!origin.permissions.create) {
+			disable_fields = true;
+		}
+	}
+
+	if (disable_fields) {
 		$form_elements = $("form").find("input, select, textarea");
 
 		$.each($form_elements, function(index, element) {

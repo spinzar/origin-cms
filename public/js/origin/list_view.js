@@ -174,7 +174,10 @@ $( document ).ready(function() {
 
 	// refresh table rows
 	function refresh_list_view(page, delete_list) {
-		$(".data-loader").show();
+		if (!delete_list) {
+			$(".data-loader").show();
+		}
+
 		var data = get_sorting_filters_data();
 
 		if (delete_list) {
