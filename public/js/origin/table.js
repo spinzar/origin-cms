@@ -258,7 +258,7 @@ function add_new_rows(table_name, records) {
 
 			// get value for the field
 			if (value[field_name] && typeof value[field_name] === 'string' && (value[field_name].isDate() || value[field_name].isDateTime())) {
-				if (child_value.split(" ").length > 1) {
+				if (value[field_name].split(" ").length > 1) {
 					field_value = moment(value[field_name]).format('DD-MM-YYYY hh:mm A');
 				}
 				else {
@@ -352,6 +352,16 @@ function add_new_rows(table_name, records) {
 					rows += '<td data-field-type="checkbox"' + hidden + ' class="text-center" style="vertical-align: middle;">\
 						<input type="hidden" class="checkbox-value" name="' + table_name + '[' + idx + '][' + field_name + ']" ' + readonly + ' value="' + (parseInt(field_value) ? 1 : 0) + '">\
 						<input type="checkbox" name="' + table_name + '[' + idx + '][' + field_name + ']" ' + readonly + (parseInt(field_value) ? " checked" : "") + '>\
+					</td>';
+				}
+				else if (field_type == "date") {
+					rows += '<td data-field-type="date">\
+						<div class="input-group date" data-autoclose="true">\
+							<span class="input-group-addon">\
+								<i class="fa fa-calendar"></i>\
+							</span>\
+							<input type="text" name="' + table_name + '[' + idx + '][' + field_name + ']" class="form-control input-sm" autocomplete="off" value="' + field_value + '">\
+						</div>\
 					</td>';
 				}
 				else if (field_type == "time") {

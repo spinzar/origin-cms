@@ -828,6 +828,16 @@ trait FormController
                             foreach ($child_record as $column_name => $column_value) {
                                 if (!in_array($column_name, $child_columns)) {
                                     unset($data[$table][$index][$column_name]);
+                                } else {
+                                    if (isset($table_schema[$column_name]) && $table_schema[$column_name] == "date" && $column_value) {
+                                        $data[$table][$index][$column_name] = date('Y-m-d', strtotime($column_value));
+                                    }
+                                    elseif (isset($table_schema[$column_name]) && $table_schema[$column_name] == "datetime" && $column_value) {
+                                        $data[$table][$index][$column_name] = date('Y-m-d H:i:s', strtotime($column_value));
+                                    }
+                                    elseif (isset($table_schema[$column_name]) && $table_schema[$column_name] == "time" && $column_value) {
+                                        $data[$table][$index][$column_name] = date('H:i:s', strtotime($column_value));
+                                    }
                                 }
 
                                 if ($child_foreign_keys && count($child_foreign_keys) && isset($child_foreign_keys[$column_name]) && !$column_value) {
@@ -909,11 +919,6 @@ trait FormController
                     // save user specific app settings
                     $settings_created = $this->createUserSettings($user_data["login_id"]);
                     $user_data['generated_password'] = $password;
-
-                    // send verification email
-                    if ($this->getAppSetting('email') == "Active") {
-                        $this->email(env('MAIL_FROM_ADDRESS'), $email_id, "Account Registration", $user_data, $module, 'emails.verify_email');
-                    }
                 }
             } elseif ($action == "update") {
                 $result = $user->where('login_id', $email_id)->update($user_data);
