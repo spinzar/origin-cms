@@ -51,6 +51,31 @@ String.prototype.isURL = function() {
 	return pattern.test(this);
 }
 
+// create slug from string
+String.prototype.slugify = function() {
+	str = this.replace(/^\s+|\s+$/g, ''); // trim
+	str = str.toLowerCase();
+
+	// remove accents, swap ñ for n, etc
+	var from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
+	var to   = "aaaaaacccdeeeeeeeeiiiinnoooooorrstuuuuuyyzaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
+
+	for (var i=0, l=from.length ; i<l ; i++) {
+		str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+	}
+
+	str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+		.replace(/&/g, '-and-') // replace '&' with 'and'
+		.replace(/\s+/g, '-') // collapse whitespace and replace by -
+		.replace(/-+/g, '-') // collapse dashes
+		.replace(/[^\w\-]+/g, '') // remove all non-word chars
+		.replace(/\-\-+/g, '-') // replace multiple '-' with single '-'
+		.replace(/^-+/, '') // Trim - from start of text
+		.replace(/-+$/, ''); // Trim - from end of text
+
+	return str;
+}
+
 // Prototyping for getting month long name and short name
 Date.prototype.getMonthName = function(lang) {
 	lang = lang && (lang in Date.locale) ? lang : 'en';
@@ -430,29 +455,31 @@ function enable_advanced_text_editor() {
 	});
 }
 
-// msgbox
+// show bootstrap modal
 function msgbox(msg, footer, title, size) {
-	$("#message-box").on("show.bs.modal", function (e) {
-		$(this).find(".modal-title").html(title ? title : "Message");
-		$(this).find(".modal-body").html(msg);
+	var modal = $('body').find('#message-box');
 
-		if (footer) {
-			$(this).find(".modal-footer").html(footer);
-			$(this).find(".modal-footer").show();
-		}
-		else {
-			$(this).find(".modal-footer").html("");
-			$(this).find(".modal-footer").hide();
-		}
-	})
-	.on('hidden.bs.modal', function (e) {
-		$(this).find(".modal-title").html("Message");
-		$(this).find(".modal-body").html("");
-		$(this).find(".modal-footer").html("");
-		$(this).find(".modal-footer").hide();
+	$(modal).on('hidden.bs.modal', function (e) {
+		$(this).find('.modal-dialog').removeClass("modal-lg modal-sm");
+		$(this).find('.modal-title').html("Message");
+		$(this).find('.modal-body').html("");
+		$(this).find('.modal-footer').html("");
+		$(this).find('.modal-footer').hide();
 	});
 
-	$('#message-box').modal('show');
+	$(modal).find('.modal-title').html(title ? title : "Message");
+	$(modal).find('.modal-body').html(msg);
+
+	if (footer) {
+		$(modal).find('.modal-footer').html(footer);
+		$(modal).find('.modal-footer').show();
+	}
+	else {
+		$(modal).find('.modal-footer').html("");
+		$(modal).find('.modal-footer').hide();
+	}
+
+	$(modal).modal('show');
 }
 
 // toastr notification

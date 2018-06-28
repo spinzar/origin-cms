@@ -52,6 +52,10 @@ $( document ).ready(function() {
 		}
 	}
 
+	if (origin.module == "Settings") {
+		disable_fields = false;
+	}
+
 	if (disable_fields) {
 		$form_elements = $("form").find("input, select, textarea");
 
@@ -124,7 +128,7 @@ $( document ).ready(function() {
 				}
 			});
 
-			$(".data-loader").show();
+			$(".data-loader-full").show();
 		}
 	});
 });

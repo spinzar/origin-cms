@@ -828,15 +828,19 @@ trait FormController
                             foreach ($child_record as $column_name => $column_value) {
                                 if (!in_array($column_name, $child_columns)) {
                                     unset($data[$table][$index][$column_name]);
-                                } else {
-                                    if (isset($table_schema[$column_name]) && $table_schema[$column_name] == "date" && $column_value) {
+                                } elseif (isset($table_schema[$column_name])) {
+                                    if ($column_value && $table_schema[$column_name] == "date") {
                                         $data[$table][$index][$column_name] = date('Y-m-d', strtotime($column_value));
-                                    }
-                                    elseif (isset($table_schema[$column_name]) && $table_schema[$column_name] == "datetime" && $column_value) {
+                                    } elseif ($column_value && $table_schema[$column_name] == "datetime") {
                                         $data[$table][$index][$column_name] = date('Y-m-d H:i:s', strtotime($column_value));
-                                    }
-                                    elseif (isset($table_schema[$column_name]) && $table_schema[$column_name] == "time" && $column_value) {
+                                    } elseif ($column_value && $table_schema[$column_name] == "time") {
                                         $data[$table][$index][$column_name] = date('H:i:s', strtotime($column_value));
+                                    } else {
+                                        if ($column_value) {
+                                            $this->convertDataType($column_value, $table_schema[$column_name]);
+                                        } else {
+                                            unset($data[$table][$index][$column_name]);
+                                        }
                                     }
                                 }
 
@@ -917,8 +921,7 @@ trait FormController
 
                 if ($result) {
                     // save user specific app settings
-                    $settings_created = $this->createUserSettings($user_data["login_id"]);
-                    $user_data['generated_password'] = $password;
+                    $this->createUserSettings($user_data["login_id"]);
                 }
             } elseif ($action == "update") {
                 $result = $user->where('login_id', $email_id)->update($user_data);

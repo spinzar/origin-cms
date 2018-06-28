@@ -143,11 +143,14 @@ a.back-to-top:hover {
 
 .ui-menu .ui-menu-item {
 	list-style-image: none;
-	border-bottom: 1px solid #ddd;
+	/*border-bottom: 1px solid #ddd;*/
 	white-space: nowrap;
 	overflow: visible;
 	width: auto;
+	border: none;
 	padding: 10px;
+	font-size: 14px;
+	color: #676a6c;
 }
 
 .ui-menu .ui-menu-item:last-child, .ui-menu .ui-menu-item:last-child:hover {
@@ -155,10 +158,11 @@ a.back-to-top:hover {
 }
 
 .ui-menu .ui-menu-item:hover {
-	border-bottom: 1px solid #ddd;
-	/*background-color: #f2f2f2;*/
+	list-style-image: none;
+	/*border-bottom: 1px solid #ddd;*/
 	cursor: pointer;
 	background-color: #f5f5f5;
+	border: none;
 }
 
 .ui-menu .ui-menu-item.ui-menu-li-image {
@@ -203,14 +207,14 @@ a.back-to-top:hover {
 }
 
 .ui-autocomplete .ui-menu-item.ui-state-focus {
+	list-style-image: none;
 	border: none;
-	/*background-color: #f2f2f2;*/
 	cursor: pointer;
 	background: #f5f5f5;
-	margin: 0px;
 	color: #333;
 	font-weight: 400;
-	border-bottom: 1px solid #ddd;
+	margin: 0px;
+	width: 100%;
 }
 
 /* Today date on button */

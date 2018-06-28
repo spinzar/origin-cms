@@ -16,7 +16,6 @@ class CreateTabActivity extends Migration
             $table->increments('id');
             $table->integer('user_id')->unsigned();
             $table->string('user');
-            $table->boolean('status');
             $table->string('module');
             $table->string('icon');
             $table->string('action')->nullable();

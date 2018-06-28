@@ -161,16 +161,6 @@ function add_row(table, idx, action) {
 					</div>\
 				</td>';
 			}
-			else if (field_type == "time") {
-				row += '<td data-field-type="time">\
-					<div class="input-group clockpicker" data-autoclose="true">\
-						<span class="input-group-addon">\
-							<i class="fa fa-clock-o"></i>\
-						</span>\
-						<input type="text" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" class="form-control input-sm" autocomplete="off">\
-					</div>\
-				</td>';
-			}
 			else if (field_type == "text" || field_type == "money") {
 				if (target_module && target_field) {
 					row += '<td data-field-type="' + field_type + '"' + hidden + '>\
@@ -359,16 +349,6 @@ function add_new_rows(table_name, records) {
 						<div class="input-group date" data-autoclose="true">\
 							<span class="input-group-addon">\
 								<i class="fa fa-calendar"></i>\
-							</span>\
-							<input type="text" name="' + table_name + '[' + idx + '][' + field_name + ']" class="form-control input-sm" autocomplete="off" value="' + field_value + '">\
-						</div>\
-					</td>';
-				}
-				else if (field_type == "time") {
-					rows += '<td data-field-type="time">\
-						<div class="input-group clockpicker" data-autoclose="true">\
-							<span class="input-group-addon">\
-								<i class="fa fa-clock-o"></i>\
 							</span>\
 							<input type="text" name="' + table_name + '[' + idx + '][' + field_name + ']" class="form-control input-sm" autocomplete="off" value="' + field_value + '">\
 						</div>\

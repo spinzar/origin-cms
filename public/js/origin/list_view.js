@@ -2,6 +2,7 @@ $( document ).ready(function() {
 
 	var current_page = 1;
 	var module_name = '';
+	var recently_deleted = false;
 
 	refresh_list_view(current_page);
 
@@ -174,14 +175,13 @@ $( document ).ready(function() {
 
 	// refresh table rows
 	function refresh_list_view(page, delete_list) {
-		if (!delete_list) {
-			$(".data-loader").show();
-		}
-
 		var data = get_sorting_filters_data();
 
 		if (delete_list) {
 			data['delete_list'] = delete_list;
+		}
+		else if (!recently_deleted) {
+			$(".data-loader").show();
 		}
 
 		$.ajax({
@@ -194,6 +194,7 @@ $( document ).ready(function() {
 					process_post_delete(data['data']);
 				}
 				else {
+					recently_deleted = false;
 					var list_columns = data['columns'];
 					var list_rows = data['rows']['data'];
 					var link_field = data['module']['link_field'];
@@ -390,6 +391,7 @@ $( document ).ready(function() {
 			$(".data-loader").hide();
 		}
 		else {
+			recently_deleted = true;
 			refresh_list_view(current_page);
 		}
 	}

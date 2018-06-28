@@ -26,9 +26,7 @@ trait CommonController
 
             unset($activity_data['login_id']);
 
-            $activity_data['status'] = 0;
             $activity_data['created_at'] = $activity_data['updated_at'] = date('Y-m-d H:i:s');
-
             Activity::insert($activity_data);
         }
     }
@@ -228,7 +226,8 @@ trait CommonController
             if ($get_nullable) {
                 $table_schema[$column->getName()] = [
                     'datatype' => $column->getType()->getName(), 
-                    'nullable' => !$column->getNotnull()
+                    'nullable' => !$column->getNotnull(),
+                    // 'default' => $column->getDefault()
                 ];
             } else {
                 $table_schema[$column->getName()] = $column->getType()->getName();
