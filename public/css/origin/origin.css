@@ -625,7 +625,7 @@ a.back-to-top:hover {
 }
 
 .report-content {
-	padding: 10px 0px 0px 0px;
+	padding: 15px 0px 0px 0px;
 }
 
 .dataTable > thead > tr > th, .dataTable > tbody > tr > td {
@@ -718,6 +718,14 @@ a.back-to-top:hover {
 	margin: 0px !important;
 }
 
+.timeline {
+	margin: 0px;
+}
+
+.no-data {
+	margin-bottom: 25px;
+}
+
 @media (max-width: 767px) {
 	.fixed .content-wrapper, .fixed .right-side {
 		padding-top: 85px;
@@ -774,6 +782,10 @@ a.back-to-top:hover {
 		border: 0px;
 	}
 
+	.list-content {
+		margin-bottom: 0px;
+	}
+
 	.table-responsive {
 		border: 0px;
 	}
@@ -800,9 +812,10 @@ a.back-to-top:hover {
 	}
 
 	.report-content {
-		padding: 10px 0px 0px 0px;
+		padding: 15px 0px 0px 0px;
 		border: 0px;
 		border-top: 1px solid #e7eaec;
+		margin-bottom: 0px;
 	}
 
 	.datatable-report {
@@ -810,7 +823,7 @@ a.back-to-top:hover {
 	}
 
 	.dataTables_wrapper {
-		padding-bottom: 10px;
+		padding-bottom: 0px;
 	}
 
 	.data-loader {

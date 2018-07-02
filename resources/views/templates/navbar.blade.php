@@ -34,17 +34,17 @@
                         </li>
                         <li class="user-footer">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-4 col-sm-4 col-xs-4">
                                     <a href="{{ route('show.doc', ['slug' => 'user', 'id' => auth()->user()->id]) }}" class="btn btn-default">
                                         Profile
                                     </a>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 col-sm-4 col-xs-4">
                                     <a href="{{ route('show.app.settings') }}" class="btn btn-default">
                                         Settings
                                     </a>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 col-sm-4 col-xs-4">
                                     <a href="{{ route('logout') }}" class="btn btn-default">
                                         Logout
                                     </a>
