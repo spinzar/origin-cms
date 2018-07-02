@@ -18,7 +18,8 @@ class UserReport extends Controller
 
         $query = DB::table($user_table_name)
             ->select(
-                'id', 'full_name', 'login_id', 'email', 'role', 'is_active'
+                'id', 'full_name', 'login_id', 'email', 'role', 
+                DB::raw("if(is_active, 'Yes', 'No') as is_active")
             );
 
         if ($request->has('filters') && $request->get('filters')) {

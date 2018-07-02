@@ -31,13 +31,34 @@
                 </div>
             </div>
             <div class="col-md-6 col-sm-6 col-xs-4 text-right">
-                <a class="btn btn-primary btn-sm" id="download_report" name="download_report" 
-                    data-toggle="tooltip" data-placement="bottom" data-container="body" title="Download Report in Excel format">
-                    <span class="hidden-xs">Download</span>
-                    <span class="visible-xs"><i class="fa fa-download"></i></span>
-                </a>
+                <div class="btn-group">
+                    <button data-toggle="dropdown" class="btn btn-success btn-sm dropdown-toggle">
+                        <span class="hidden-xs">Download <span class="caret"></span></span>
+                        <span class="visible-xs">
+                            <i class="fa fa-download"></i>
+                            <span class="caret"></span>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-left">
+                        <li>
+                            <a href="#" class="download-report" data-format="xls">
+                                XLS
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="download-report" data-format="xlsx">
+                                XLSX
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="download-report" data-format="csv">
+                                CSV
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 @if (view()->exists('layouts/reports/' . strtolower(str_replace(" ", "_", $title))))
-                    <a class="btn btn-success btn-sm" id="filter_report" name="refresh_report"
+                    <a class="btn btn-primary btn-sm" id="filter_report" name="refresh_report"
                         data-toggle="tooltip" data-placement="bottom" data-container="body" title="Filter Report">
                         <span class="hidden-xs">Filter</span>
                         <span class="visible-xs"><i class="fa fa-filter"></i></span>
@@ -71,6 +92,16 @@
                 <tbody></tbody>
             </table>
             <div class="data-loader" style="display: none;">Loading...</div>
+        </div>
+        <div class="box-footer clearfix">
+            <div class="row report-pagination">
+                <div class="col-sm-5 col-xs-6">
+                    <div class="dataTables_info" id="report-table_info" role="status" aria-live="polite"></div>
+                </div>
+                <div class="col-sm-7 col-xs-6 text-right">
+                    <div class="dataTables_paginate" id="report-table_paginate"></div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

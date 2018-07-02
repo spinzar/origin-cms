@@ -22,38 +22,71 @@ class ActivityController extends Controller
         if ($request->ajax()) {
             $fetch_fields = [
                 'id', 'user_id', 'user', 'module', 'icon', 'action', 
-                'form_id', 'form_title', 'created_at'
+                'form_id', 'form_title', 'created_at', 'owner'
             ];
 
-            $activities = Activity::select($fetch_fields);
+            $activities = DB::table('oc_activity')
+                ->select($fetch_fields);
 
             if (auth()->user()->role != 'System Administrator') {
                 $modules = $this->getRoleModules();
                 $module_ids_map = $this->getAllowedModuleRecordIds($modules);
 
                 if ($module_ids_map && count($module_ids_map)) {
-                    $activities = $activities->where('module', 'Auth')
-                        ->whereIn('user_id', $module_ids_map['User']);
+                    $module_ids_map['Auth'] = $module_ids_map['User'];
 
-                    foreach ($module_ids_map as $module => $ids) {
-                        if ($ids && count($ids)) {
-                            $conditions = Activity::select($fetch_fields)
-                                ->where('module', $module)
-                                ->whereIn('form_id', $ids);
+                    $activities = $activities->where(function($query) use($module_ids_map) {
+                        foreach ($module_ids_map as $module => $ids) {
+                            if ($module == "Auth") {
+                                $id_column = 'user_id';
+                            } else {
+                                $id_column = 'form_id';
+                            }
 
-                            $activities = $activities->union($conditions);
+                            $query->orWhere(function($subquery) use($module, $ids, $id_column) {
+                                $subquery->where('module', $module);
+                                $subquery->whereIn($id_column, $ids);
+                            });
+                        }
+
+                        $query->orWhere(function($subquery) use($module_ids_map) {
+                            $subquery->where('action', 'Delete');
+                            $subquery->whereIn('user_id', $module_ids_map['User']);
+                        });
+                    });
+                }
+            }
+
+            if ($request->has('filters') && $request->get('filters')) {
+                $filters = $request->get('filters');
+
+                foreach ($filters as $column => $value) {
+                    $activities = $activities->where($column, $value);
+                }
+            }
+
+            $activities = $activities->orderBy('created_at', 'desc')
+                ->paginate(20);
+
+            $current_user = auth()->user();
+            return response()->json(compact('activities', 'current_user'), 200);
+        } else {
+            $user_role = auth()->user()->role;
+            $modules = $this->getAppModules();
+
+            if ($user_role != 'System Administrator') {
+                $role_modules = $this->roleWiseModules($user_role, "Read");
+
+                if ($role_modules) {
+                    foreach ($modules as $module_name => $config) {
+                        if (!in_array($module_name, $role_modules)) {
+                            unset($modules[$module_name]);
                         }
                     }
                 }
             }
 
-            $activities = $activities->orderBy('created_at', 'desc')
-                ->unionPaginate(20, $fetch_fields, $pageName = 'page', $request->get('page'));
-
-            $current_user = auth()->user();
-            return response()->json(compact('activities', 'current_user'), 200);
-        } else {
-            return view('layouts.origin.activities');
+            return view('layouts.origin.activities', compact('modules'));
         }
     }
 

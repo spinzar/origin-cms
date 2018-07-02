@@ -127,6 +127,10 @@ a.back-to-top:hover {
 	margin-top: -9px;
 }
 
+.autocomplete {
+	cursor: default;
+}
+
 .ui-autocomplete {
 	max-height: 220px;
 	overflow-y: auto;
@@ -150,7 +154,7 @@ a.back-to-top:hover {
 	border: none;
 	padding: 10px;
 	font-size: 14px;
-	color: #676a6c;
+	color: #777;
 }
 
 .ui-menu .ui-menu-item:last-child, .ui-menu .ui-menu-item:last-child:hover {
@@ -161,7 +165,7 @@ a.back-to-top:hover {
 	list-style-image: none;
 	/*border-bottom: 1px solid #ddd;*/
 	cursor: pointer;
-	background-color: #f5f5f5;
+	background-color: #e1e3e9;
 	border: none;
 }
 
@@ -176,7 +180,7 @@ a.back-to-top:hover {
 	font-weight: 400;
 	line-height: 25px;
 	cursor: pointer;
-	color: #676a6c;
+	color: #777;
 }
 
 .ui-autocomplete .ui-menu-item .ui-menu-item-image.ui-menu-item-wrapper {
@@ -210,11 +214,18 @@ a.back-to-top:hover {
 	list-style-image: none;
 	border: none;
 	cursor: pointer;
-	background: #f5f5f5;
+	background: #e1e3e9;
 	color: #333;
 	font-weight: 400;
 	margin: 0px;
 	width: 100%;
+}
+
+.autocomplete-no-data {
+	cursor: default !important;
+	background-color: #fff !important;
+	border: none !important;
+	color: #777 !important;
 }
 
 /* Today date on button */
@@ -425,6 +436,16 @@ a.back-to-top:hover {
 	margin: 0px;
 }
 
+.dropdown-menu {
+	padding: 0px;
+	border-radius: 0px 0px 3px 3px;
+}
+
+.dropdown-menu > li > a {
+	padding: 8px 15px;
+	cursor: pointer;
+}
+
 .list-dropdown-field {
 	display: inline-block;
 	margin: 0;
@@ -595,6 +616,10 @@ a.back-to-top:hover {
 	padding: 20px 20px 5px 20px;
 }
 
+.report-content {
+	padding: 10px 0px 0px 0px;
+}
+
 .dataTable > thead > tr > th, .dataTable > tbody > tr > td {
 	white-space: nowrap;
 }
@@ -615,7 +640,7 @@ a.back-to-top:hover {
 }
 
 .report-pagination {
-	margin: 15px 0px 0px 0px;
+	margin: 0px;
 }
 
 /* Timeline */

@@ -52,7 +52,7 @@
                         <div class="form-status non-printable">
                             <small>
                                 <span class="text-center" id="form-stats">
-                                    <i class="fa fa-circle text-success"></i>
+                                    <i class="fa fa-circle text-green"></i>
                                     <span id="form-status">Saved</span>
                                 </span>
                             </small>

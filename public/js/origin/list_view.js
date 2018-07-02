@@ -53,8 +53,10 @@ $( document ).ready(function() {
 
 	// on row click show the record form view
 	$(".list-view").on("click" , '.clickable_row', function(e) {
-		if ($(e.target).closest('td').attr('data-field-name') != "row_check" && e.target.type != "checkbox") {
-			window.location = $(this).data("href");
+		if (!$(e.target).is("a")) {
+			if ($(e.target).closest('td').attr('data-field-name') != "row_check" && e.target.type != "checkbox") {
+				window.location = $(this).data("href");
+			}
 		}
 	});
 
@@ -245,9 +247,9 @@ $( document ).ready(function() {
 					$(".data-loader").hide();
 					$(list_table).find('.list-view-items').empty().append(list_records);
 					toggle_action_button();
-					$("#item-count").html(data['rows']['total']);
-					$("#item-from").html(data['rows']['from']);
-					$("#item-to").html(data['rows']['to']);
+					$("#item-count").html(data['rows']['total'] || '0');
+					$("#item-from").html(data['rows']['from'] || '0');
+					$("#item-to").html(data['rows']['to'] || '0');
 					beautify_list_view();
 
 					$(".origin-pagination-content").empty().append(make_pagination(data['rows']));
@@ -410,6 +412,7 @@ $( document ).ready(function() {
 	$(window).on('hashchange', function() {
 		if (window.location.hash) {
 			var page = window.location.hash.replace('#', '');
+
 			if (page == Number.NaN || page <= 0) {
 				return false;
 			}

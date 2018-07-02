@@ -2,13 +2,15 @@
 
 namespace App;
 
-use Krossroad\UnionPaginator\UnionPaginatorTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class Activity extends Model
 {
-    use UnionPaginatorTrait;
-
+    /**
+     * The database table used by the model.
+     *
+     * @var string
+     */
     protected $table = 'oc_activity';
 
     /**

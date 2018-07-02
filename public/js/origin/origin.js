@@ -315,8 +315,8 @@ function enable_autocomplete() {
 			}
 		}).autocomplete("instance")._renderItem = function(ul, item) {
 			if (item["label"] == "No matches found" || item["label"] == "No Data") {
-				var list_item = '<li class="text-center">\
-					<div><strong>' + item["label"] + '</strong></div>\
+				var list_item = '<li class="text-center autocomplete-no-data">\
+					<div class="autocomplete-no-data"><strong>' + item["label"] + '</strong></div>\
 				</li>';
 			}
 			else {

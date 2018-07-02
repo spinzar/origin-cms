@@ -8,6 +8,12 @@ $( document ).ready(function() {
 	});
 
 	// get records when click on pagination links
+	$('body').on('change', '.activity-filter', function (e) {
+		current_page = 1;
+		refresh_activity(current_page);
+	});
+
+	// get records when click on pagination links
 	$('body').on('click', '.origin-pagination a', function (e) {
 		e.preventDefault();
 
@@ -18,17 +24,20 @@ $( document ).ready(function() {
 	});
 
 	function refresh_activity(page) {
+		var data = get_filters_data();
 		$(".data-loader").show();
 
 		$.ajax({
 			type: 'GET',
 			url: app_route + '?page=' + page,
+			data: data,
 			dataType: 'json',
 			success: function(data) {
 				var app_activities = data['activities']['data'];
 				var current_user = data['current_user'];
 				var number_start = data['activities']['from'];
 				var activities = "";
+				$('body').find('.no-data').remove();
 
 				if (app_activities.length > 0) {
 					$.each(app_activities, function(index, row) {
@@ -76,22 +85,29 @@ $( document ).ready(function() {
 						activities += '<li>\
 							<i class="' + row["icon"] + ' ' + icon_bg + '"></i>\
 							<div class="timeline-item">\
-                                <span class="time">\
-                                    <i class="fa fa-clock-o"></i> ' + from_now_time + '\
-                                </span>\
-                                <div class="timeline-body no-border">' + desc + '<br />\
-                                    <small class="text-muted">' + actual_time + '</small>\
-                                </div>\
-                            </div>\
+								<span class="time">\
+									<i class="fa fa-clock-o"></i> ' + from_now_time + '\
+								</span>\
+								<div class="timeline-body no-border">' + desc + '<br />\
+									<small class="text-muted">' + actual_time + '</small>\
+								</div>\
+							</div>\
 						</div>';
 					});
+
+					$('.origin-activities').empty().append(activities);
+				}
+				else {
+					activities = '<div class="h4 text-center no-data"><strong>No Data</strong></div>';
+
+					$('.origin-activities').empty();
+					$('.origin-activities').after(activities);
 				}
 
 				$(".data-loader").hide();
-				$('.origin-activities').empty().append(activities);
-				$("#item-count").html(data['activities']['total']);
-				$("#item-from").html(data['activities']['from']);
-				$("#item-to").html(data['activities']['to']);
+				$("#item-count").html(data['activities']['total'] || '0');
+				$("#item-from").html(data['activities']['from'] || '0');
+				$("#item-to").html(data['activities']['to'] || '0');
 				$(".origin-pagination-content").empty().append(make_pagination(data['activities']));
 			},
 			error: function(e) {
@@ -104,6 +120,7 @@ $( document ).ready(function() {
 	$(window).on('hashchange', function() {
 		if (window.location.hash) {
 			var page = window.location.hash.replace('#', '');
+
 			if (page == Number.NaN || page <= 0) {
 				return false;
 			}
@@ -112,4 +129,31 @@ $( document ).ready(function() {
 			}
 		}
 	});
+
+	// prepare all filters data
+	function get_filters_data() {
+		var data = {};
+		var filters = {};
+		var owner = $('body').find('[name="owner"]').val();
+		var action = $('body').find('[name="action"]').val();
+		var module = $('body').find('[name="module"]').val();
+
+		if (owner || action || module) {
+			if (owner) {
+				filters['owner'] = owner
+			}
+
+			if (action) {
+				filters['action'] = action
+			}
+
+			if (module) {
+				filters['module'] = module
+			}
+
+			data['filters'] = filters;
+		}
+
+		return data;
+	}
 });

@@ -196,8 +196,8 @@ function enable_save_button() {
 	form_changed = true;
 	$("#save_form").removeClass("disabled");
 	$("#save_form").prop("disabled", false);
-	$("#form-stats > i").removeClass("text-success").addClass("text-warning");
-	$("#form-status").html('<b>Not Saved</b>');
+	$("#form-stats > i").removeClass("text-green").addClass("text-yellow");
+	$("#form-status").html('Not Saved');
 }
 
 // show image files locally with uploading

@@ -8,7 +8,6 @@
         "php": ">=7.0.0",
         "doctrine/dbal": "^2.5",
         "fideloper/proxy": "~3.3",
-        "krossroad/laravel-union-paginator": "^5.5",
         "laravel/framework": "5.5.*",
         "laravel/socialite": "^3.0",
         "laravel/tinker": "~1.0",

@@ -46,7 +46,12 @@ class ReportController extends Controller
 
             if ($request->has('download') && $request->get('download') == 'Yes') {
                 $report_data = $this->getData($request, $report_name, true);
-                return $this->downloadReport(studly_case($report_name), $report_data['columns'], $report_data['rows']);
+
+                if ($request->has('format') && $request->get('format')) {
+                    return $this->downloadReport(studly_case($report_name), $report_data['columns'], $report_data['rows'], $request->get('format'));
+                } else {
+                    return $this->downloadReport(studly_case($report_name), $report_data['columns'], $report_data['rows']);
+                }
             } else {
                 if ($request->ajax()) {
                     $report_data = $this->getData($request, $report_name);
@@ -81,9 +86,17 @@ class ReportController extends Controller
         return $report_controller->getData($request, $per_page, $download);
     }
 
-    // make downloadable xls file for report
-    public function downloadReport($report_name, $columns, $rows, $suffix = null, $action = null, $custom_rows = null)
+    // download report in xls, xlsx, csv formats
+    public function downloadReport($report_name, $columns, $rows, $format, $suffix = null, $action = null, $custom_rows = null)
     {
+        if ($format) {
+            if (!in_array($format, ['xls', 'xlsx', 'csv'])) {
+                $format = 'xls';
+            }
+        } else {
+            $format = 'xls';
+        }
+
         // file name for download
         if ($suffix) {
             $filename = $report_name . "-" . date('Y-m-d H:i:s') . "-" . $suffix;
@@ -148,12 +161,12 @@ class ReportController extends Controller
 
         if ($action) {
             if ($action == "store") {
-                return $report->store('xls', false, true);
+                return $report->store($format, false, true);
             } else {
-                $report->download('xls');
+                $report->download($format);
             }
         } else {
-            $report->download('xls');
+            $report->download($format);
         }
     }
 }

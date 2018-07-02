@@ -48,11 +48,8 @@ $( document ).ready(function() {
 		refresh_grid_view(current_page);
 	});
 
-	var search_box = $('body').find('#report-table_filter');
-	search_box = $(search_box).find('input[type="search"]');
-
 	// refresh grid view if search is changed
-	$('body').on('input change', search_box, function() {
+	$('body').on("input change", 'input[type="search"]', function() {
 		if ($(this).val() == "") {
 			current_page = 1;
 			refresh_grid_view(current_page);
@@ -60,17 +57,20 @@ $( document ).ready(function() {
 	});
 
 	// get records when click on pagination links
-	$(document).on('click', '.origin-pagination a', function (e) {
+	$('body').on('click', '.origin-pagination a', function (e) {
+		e.preventDefault();
+
 		if ($(this).attr('href') != "#" && $(this).attr('href').indexOf('page=') >= 0) {
 			current_page = $(this).attr('href').split('page=')[1];
-			refresh_grid_view(current_page);
-			e.preventDefault();
+			refresh_activity(current_page);
 		}
 	});
 
 	// download the report
-	$("#download_report").on("click", function() {
+	$(".download-report").on("click", function(e) {
+		e.preventDefault();
 		var filters = "";
+		var format = $(this).data('format');
 
 		$.each($("#report-filters").find("input, select"), function() {
 			if ($(this).attr("name") && $(this).val()) {
@@ -78,7 +78,7 @@ $( document ).ready(function() {
 			}
 		});
 
-		window.location = app_route + "?download=Yes" + filters;
+		window.location = app_route + "?download=Yes&format=" + format + filters;
 	});
 
 	function refresh_grid_view(page) {
@@ -149,7 +149,11 @@ $( document ).ready(function() {
 				}
 
 				$(".data-loader").hide();
-				$("#report-table_info").html("Showing " + from + " to " + to + " of " + total + " entries");
+
+				var report_info = from + ' - ' + to + ' of\
+					<strong><span class="badge">' + total + '</span></strong>';
+
+				$("#report-table_info").html(report_info);
 				$("#report-table_paginate").empty().append(make_pagination(data['rows']));
 			}
 		});
@@ -174,7 +178,7 @@ $( document ).ready(function() {
 
 		report_table = $('table#report-table').DataTable({
 			"bProcessing": true,
-			"sDom": "<'row report-actions'<'col-sm-6 p-l-none'l><'col-sm-6 p-r-none'f>r>t<'row report-pagination'<'col-sm-5 p-l-none'i><'col-sm-7 p-r-none'p>>",
+			"sDom": "<'row report-actions'<'col-sm-6'l><'col-sm-6'f>r>t",
 			"iDisplayLength": 50,
 			"sPaginationType": "full_numbers",
 			"bAutoWidth": false,
@@ -210,6 +214,7 @@ $( document ).ready(function() {
 	$(window).on('hashchange', function() {
 		if (window.location.hash) {
 			var page = window.location.hash.replace('#', '');
+
 			if (page == Number.NaN || page <= 0) {
 				return false;
 			}
