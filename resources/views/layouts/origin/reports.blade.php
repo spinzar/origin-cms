@@ -14,7 +14,7 @@
                 <div class="box">
                     <div class="box-body">
                         <div style="text-align: center; margin-bottom: 17px">
-                            <a href="{{ route('show.report', snake_case($report_name)) }}" class="btn btn-app" style="background-color: {{ $report['bg_color'] }}; border-color: {{ $report['bg_color'] }}; color: {{ $report['icon_color'] }};">
+                            <a href="{{ route('show.report', snake_case($report_name)) }}" class="btn btn-app report-btn" style="background-color: {{ $report['bg_color'] }}; border-color: {{ $report['bg_color'] }}; color: {{ $report['icon_color'] }};">
                                 <i class="{{ $report['icon'] }}"></i>
                             </a>
                         </div>
