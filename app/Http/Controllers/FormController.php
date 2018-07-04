@@ -857,6 +857,8 @@ trait FormController
                                 $data[$table][$index]['created_at'] = $created_at;
                             }
                         }
+                    } else {
+                        unset($data[$table][$index]);
                     }
                 }
             }
