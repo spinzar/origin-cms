@@ -33,6 +33,15 @@ class ActivityController extends Controller
                 $module_ids_map = $this->getAllowedModuleRecordIds($modules);
 
                 if ($module_ids_map && count($module_ids_map)) {
+                    $all_modules = $this->getAppModules();
+
+                    foreach ($module_ids_map as $module => $ids) {
+                        if ($module != $all_modules[$module]['display_name']) {
+                            $module_ids_map[$all_modules[$module]['display_name']] = $ids;
+                            unset($module_ids_map[$module]);
+                        }
+                    }
+
                     $module_ids_map['Auth'] = $module_ids_map['User'];
 
                     $activities = $activities->where(function($query) use($module_ids_map) {
