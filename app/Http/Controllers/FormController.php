@@ -800,7 +800,7 @@ trait FormController
                 }
             } else {
                 // get the table schema
-                $table_schema = $this->getTableSchema($table);
+                $table_schema = $this->getTableSchema($table, true);
 
                 foreach (array_values($table_data) as $index => $child_record) {
                     if (isset($child_record['action']) && $child_record['action'] && isset($data[$table][$index])) {
@@ -829,17 +829,22 @@ trait FormController
                                 if (!in_array($column_name, $child_columns)) {
                                     unset($data[$table][$index][$column_name]);
                                 } elseif (isset($table_schema[$column_name])) {
-                                    if ($column_value && $table_schema[$column_name] == "date") {
+                                    if ($column_value && $table_schema[$column_name]['datatype'] == "date") {
                                         $data[$table][$index][$column_name] = date('Y-m-d', strtotime($column_value));
-                                    } elseif ($column_value && $table_schema[$column_name] == "datetime") {
+                                    } elseif ($column_value && $table_schema[$column_name]['datatype'] == "datetime") {
                                         $data[$table][$index][$column_name] = date('Y-m-d H:i:s', strtotime($column_value));
-                                    } elseif ($column_value && $table_schema[$column_name] == "time") {
+                                    } elseif ($column_value && $table_schema[$column_name]['datatype'] == "time") {
                                         $data[$table][$index][$column_name] = date('H:i:s', strtotime($column_value));
                                     } else {
                                         if ($column_value) {
-                                            $this->convertDataType($column_value, $table_schema[$column_name]);
+                                            $this->convertDataType($column_value, $table_schema[$column_name]['datatype']);
                                         } else {
-                                            unset($data[$table][$index][$column_name]);
+                                            if ($table_schema[$column_name]['datatype'] == "boolean") {
+                                                $value = 0;
+                                                $data[$table][$index][$column_name] = $value;
+                                            } else {
+                                                unset($data[$table][$index][$column_name]);
+                                            }
                                         }
                                     }
                                 }
