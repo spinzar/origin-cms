@@ -28,7 +28,7 @@ class ModuleController extends Controller
         $modules = $this->getAppModules();
 
         if ($user_role != 'System Administrator') {
-            $role_modules = $this->roleWiseModules($user_role, "Read");
+            $role_modules = $this->roleWiseModules($user_role, "Show");
 
             if ($role_modules) {
                 foreach ($modules as $module_name => $config) {

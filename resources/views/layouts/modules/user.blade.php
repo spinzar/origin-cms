@@ -16,7 +16,7 @@
                     <div class="media">
                         <div class="pull-left text-center avatar-box">
                         @if (isset($form_data[$table_name]['avatar']) && $form_data[$table_name]['avatar'])
-                            <img src="{{ $form_data[$table_name]['avatar'] }}" alt="{{ $form_data[$table_name]['full_name'] }}">
+                            <img src="{{ getImage($form_data[$table_name]['avatar'], 100, 100) }}" alt="{{ $form_data[$table_name]['full_name'] }}">
                         @else
                             <i class="fa fa-picture-o fa-2x avatar"></i>
                         @endif

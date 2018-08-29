@@ -305,7 +305,7 @@ trait FormController
 
             // create user if modules come under user_via_modules
             if (in_array($module['name'], $this->user_via_modules)) {
-                $this->userFormAction($request, $module['name'], $action, isset($data['avatar']) ? $data['avatar'] : "");
+                $this->userFormAction($request, $module['name'], $action, isset($data['avatar']) ? $data['avatar'] : null);
             }
 
             $form_view_data = [
@@ -725,8 +725,7 @@ trait FormController
                         unset($data[$module['table_name']][$column]);
                     }
                 } elseif (isset($table_schema[$column]) && $table_schema[$column]['datatype'] == "boolean") {
-                    $value = 0;
-                    $data[$module['table_name']][$column] = $value;
+                    $data[$module['table_name']][$column] = 0;
                 } else {
                     if ($module['link_field_value'] && isset($table_schema[$column])) {
                         $data[$module['table_name']][$column] = null;
@@ -807,59 +806,66 @@ trait FormController
                         if ($child_record['action'] == "none") {
                             unset($data[$table][$index]);
                         } else {
-                            if (isset($data[$table][$index]['id']) && $data[$table][$index]['id']) {
-                                $data[$table][$index]['id'] = (int) $data[$table][$index]['id'];
-                            }
-                            // insert foreign key of child table which connects to parent table link field
-                            if (isset($data[$parent_table]) && isset($data[$parent_table][$module['link_field']])) {
-                                $data[$table][$index][$module['child_foreign_key']] = $data[$parent_table][$module['link_field']];
-                            }
-                            if (isset($module['copy_parent_fields']) && isset($data[$parent_table])) {
-                                foreach ($module['copy_parent_fields'] as $parent_field => $child_field) {
-                                    $data[$table][$index][$child_field] = $data[$parent_table][$parent_field];
+                            $child_data = $child_record;
+                            unset($child_data['id'], $child_data['action']);
+
+                            // check if child table has any parameter with value
+                            if (count(array_filter($child_data)) === 0) {
+                                unset($data[$table][$index]);
+                            } else {
+                                if (isset($data[$table][$index]['id']) && $data[$table][$index]['id']) {
+                                    $data[$table][$index]['id'] = (int) $data[$table][$index]['id'];
                                 }
-                            }
-
-                            // remove invalid columns from child table data
-                            $child_columns = array_keys($table_schema);
-                            // provide ignored fields
-                            array_push($child_columns, 'action');
-
-                            foreach ($child_record as $column_name => $column_value) {
-                                if (!in_array($column_name, $child_columns)) {
-                                    unset($data[$table][$index][$column_name]);
-                                } elseif (isset($table_schema[$column_name])) {
-                                    if ($column_value && $table_schema[$column_name]['datatype'] == "date") {
-                                        $data[$table][$index][$column_name] = date('Y-m-d', strtotime($column_value));
-                                    } elseif ($column_value && $table_schema[$column_name]['datatype'] == "datetime") {
-                                        $data[$table][$index][$column_name] = date('Y-m-d H:i:s', strtotime($column_value));
-                                    } elseif ($column_value && $table_schema[$column_name]['datatype'] == "time") {
-                                        $data[$table][$index][$column_name] = date('H:i:s', strtotime($column_value));
-                                    } else {
-                                        if ($column_value) {
-                                            $this->convertDataType($column_value, $table_schema[$column_name]['datatype']);
-                                        } else {
-                                            if ($table_schema[$column_name]['datatype'] == "boolean") {
-                                                $value = 0;
-                                                $data[$table][$index][$column_name] = $value;
-                                            } else {
-                                                unset($data[$table][$index][$column_name]);
-                                            }
-                                        }
+                                // insert foreign key of child table which connects to parent table link field
+                                if (isset($data[$parent_table]) && isset($data[$parent_table][$module['link_field']])) {
+                                    $data[$table][$index][$module['child_foreign_key']] = $data[$parent_table][$module['link_field']];
+                                }
+                                if (isset($module['copy_parent_fields']) && isset($data[$parent_table])) {
+                                    foreach ($module['copy_parent_fields'] as $parent_field => $child_field) {
+                                        $data[$table][$index][$child_field] = $data[$parent_table][$parent_field];
                                     }
                                 }
 
-                                if ($child_foreign_keys && count($child_foreign_keys) && isset($child_foreign_keys[$column_name]) && !$column_value) {
-                                    unset($data[$table][$index][$column_name]);
+                                // remove invalid columns from child table data
+                                $child_columns = array_keys($table_schema);
+                                // provide ignored fields
+                                array_push($child_columns, 'action');
+
+                                foreach ($child_record as $column_name => $column_value) {
+                                    if (!in_array($column_name, $child_columns)) {
+                                        unset($data[$table][$index][$column_name]);
+                                    } elseif (isset($table_schema[$column_name])) {
+                                        if ($column_value && $table_schema[$column_name]['datatype'] == "date") {
+                                            $data[$table][$index][$column_name] = date('Y-m-d', strtotime($column_value));
+                                        } elseif ($column_value && $table_schema[$column_name]['datatype'] == "datetime") {
+                                            $data[$table][$index][$column_name] = date('Y-m-d H:i:s', strtotime($column_value));
+                                        } elseif ($column_value && $table_schema[$column_name]['datatype'] == "time") {
+                                            $data[$table][$index][$column_name] = date('H:i:s', strtotime($column_value));
+                                        } else {
+                                            if ($column_value) {
+                                                $this->convertDataType($column_value, $table_schema[$column_name]['datatype']);
+                                            } else {
+                                                if ($table_schema[$column_name]['datatype'] == "boolean") {
+                                                    $data[$table][$index][$column_name] = 0;
+                                                } else {
+                                                    unset($data[$table][$index][$column_name]);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if ($child_foreign_keys && count($child_foreign_keys) && isset($child_foreign_keys[$column_name]) && !$column_value) {
+                                        unset($data[$table][$index][$column_name]);
+                                    }
                                 }
-                            }
 
-                            $data[$table][$index]['last_updated_by'] = $last_updated_by;
-                            $data[$table][$index]['updated_at'] = $updated_at;
+                                $data[$table][$index]['last_updated_by'] = $last_updated_by;
+                                $data[$table][$index]['updated_at'] = $updated_at;
 
-                            if ($child_record['action'] == "create") {
-                                $data[$table][$index]['owner'] = $owner;
-                                $data[$table][$index]['created_at'] = $created_at;
+                                if ($child_record['action'] == "create") {
+                                    $data[$table][$index]['owner'] = $owner;
+                                    $data[$table][$index]['created_at'] = $created_at;
+                                }
                             }
                         }
                     } else {
@@ -884,6 +890,12 @@ trait FormController
             $email_id = $request->get('email');
         }
 
+        if ($request->has('login_id') && $request->get('login_id')) {
+            $login_id = $request->get('login_id');
+        } else {
+            $login_id = $email_id;
+        }
+
         if ($action == "delete") {
             $result = $user->where('login_id', $email_id)->delete();
         } else {
@@ -895,7 +907,7 @@ trait FormController
 
             $user_data = array(
                 "full_name" => $full_name,
-                "login_id" => $email_id,
+                "login_id" => $login_id,
                 "email" => $email_id,
                 "is_active" => $request->get('is_active') ? $request->get('is_active') : 1,
                 "last_updated_by" => auth()->user()->login_id, 
@@ -928,10 +940,10 @@ trait FormController
 
                 if ($result) {
                     // save user specific app settings
-                    $this->createUserSettings($user_data["login_id"]);
+                    $this->createUserSettings($user_data["login_id"], $role);
                 }
             } elseif ($action == "update") {
-                $result = $user->where('login_id', $email_id)->update($user_data);
+                $result = $user->where('login_id', $login_id)->update($user_data);
             }
         }
 

@@ -145,4 +145,40 @@
         return $spelling;
     }
 
+    function getImage($path, $width = null, $height = null, $quality = null, $crop = null, $align = null, $sharpen = null) {
+        if (!$width && !$height) {
+            $url = route('show.website') . $path;
+        } else {
+            $url = route('show.website') . '/timthumb.php?src=' . route('show.website') . $path;
+
+            if (isset($width)) {
+                $url .= '&w=' . $width; 
+            }
+
+            if (isset($height) && $height > 0) {
+                $url .= '&h=' .$height;
+            }
+
+            if (isset($quality) && $quality) {
+                $url .= '&q='.$quality;
+            } else {
+                $url .= '&q=95';
+            }
+
+            if (isset($crop)) {
+                $url .= "&zc=".$crop;
+            }
+
+            if (isset($align) && $align) {
+                $url .= '&a=' . $align; 
+            }
+
+            if (isset($sharpen) && $sharpen) {
+                $url .= "&s=".$sharpen;
+            }
+        }
+
+        return $url;
+    }
+
 ?>

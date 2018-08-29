@@ -674,6 +674,44 @@ function sticky_relocate() {
 	}
 }
 
+function getImage(path, width, height, quality, crop, align, sharpen) {
+	var url = '';
+
+	if (!width && !height) {
+		url = base_url + path;
+	} else {
+		url = base_url + '/timthumb.php?src=' + base_url + path;
+
+		if (width) {
+			url += '&w=' + width; 
+		}
+
+		if (height && height > 0) {
+			url += '&h=' + height;
+		}
+
+		if (quality) {
+			url += '&q=' + quality;
+		} else {
+			url += '&q=95';
+		}
+
+		if (crop) {
+			url += "&zc=" + crop;
+		}
+
+		if (align) {
+			url += '&a=' + align;
+		}
+
+		if (sharpen) {
+			url += "&s=" + sharpen;
+		}
+	}
+
+	return url;
+}
+
 // Removes any white space to the right and left of the string
 function trim(str) {
 	return str.replace(/^\s+|\s+$/g, "");

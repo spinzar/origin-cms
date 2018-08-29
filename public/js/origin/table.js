@@ -153,7 +153,7 @@ function add_row(table, idx, action) {
 			}
 			else if (field_type == "date") {
 				row += '<td data-field-type="date">\
-					<div class="input-group date" data-autoclose="true">\
+					<div class="input-group date">\
 						<span class="input-group-addon">\
 							<i class="fa fa-calendar"></i>\
 						</span>\
@@ -161,7 +161,17 @@ function add_row(table, idx, action) {
 					</div>\
 				</td>';
 			}
-			else if (field_type == "text" || field_type == "money") {
+			else if (field_type == "datetime") {
+				row += '<td data-field-type="datetime">\
+					<div class="input-group datetimepicker">\
+						<span class="input-group-addon">\
+							<i class="fa fa-calendar"></i>\
+						</span>\
+						<input type="text" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" class="form-control input-sm" autocomplete="off">\
+					</div>\
+				</td>';
+			}
+			else if (field_type == "text") {
 				if (target_module && target_field) {
 					row += '<td data-field-type="' + field_type + '"' + hidden + '>\
 						<input type="text" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" \
@@ -176,13 +186,17 @@ function add_row(table, idx, action) {
 				}
 			}
 			else if (field_type == "textarea") {
-				row += '<td data-field-type="textarea">\
+				row += '<td data-field-type="textarea"' + hidden + '>\
 					<textarea rows="5" cols="8" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']" \
 					class="form-control input-sm" autocomplete="off"></textarea>\
 				</td>';
 			}
+			else if (field_type == "blank") {
+				row += '<td data-field-type="blank"' + hidden + '></td>';
+			}
 		}
 	});
+
 	row += '</tr>';
 
 	$(tbody).append(row);
@@ -346,7 +360,7 @@ function add_new_rows(table_name, records) {
 				}
 				else if (field_type == "date") {
 					rows += '<td data-field-type="date">\
-						<div class="input-group date" data-autoclose="true">\
+						<div class="input-group date">\
 							<span class="input-group-addon">\
 								<i class="fa fa-calendar"></i>\
 							</span>\
@@ -354,7 +368,17 @@ function add_new_rows(table_name, records) {
 						</div>\
 					</td>';
 				}
-				else if (field_type == "text" || field_type == "money") {
+				else if (field_type == "datetime") {
+					rows += '<td data-field-type="datetime">\
+						<div class="input-group datetimepicker">\
+							<span class="input-group-addon">\
+								<i class="fa fa-calendar"></i>\
+							</span>\
+							<input type="text" name="' + table_name + '[' + idx + '][' + field_name + ']" class="form-control input-sm" autocomplete="off" value="' + field_value + '">\
+						</div>\
+					</td>';
+				}
+				else if (field_type == "text") {
 					if (target_module && target_field) {
 						rows += '<td data-field-type="' + field_type + '"' + hidden + '>\
 							<input type="text" name="' + table_name + '[' + idx + '][' + field_name + ']" \
@@ -369,10 +393,13 @@ function add_new_rows(table_name, records) {
 					}
 				}
 				else if (field_type == "textarea") {
-					rows += '<td data-field-type="textarea">\
+					rows += '<td data-field-type="textarea"' + hidden + '>\
 						<textarea rows="5" cols="8" name="' + table_name + '[' + idx + '][' + field_name + ']" \
 						class="form-control input-sm" autocomplete="off">' + field_value + '</textarea>\
 					</td>';
+				}
+				else if (field_type == "blank") {
+					rows += '<td data-field-type="blank">' + field_value + '</td>';
 				}
 			}
 		});
@@ -401,6 +428,44 @@ function set_pickers_in_table(table_name, table, field_types) {
 				forceParse: false,
 				autoclose: true
 			}).on('changeDate', function(ev) {
+				if (typeof origin.data[table_name] !== "undefined") {
+					var doc_records = origin.data[table_name].length;
+				}
+				else {
+					var doc_records = 0;
+				}
+
+				var tab_records = $(table).find("tbody > tr").length;
+
+				if ($.trim($('body').find('[name="id"]').val()) && doc_records == tab_records) {
+					$(element).closest("tr").find("td.action > input").val("update");
+				}
+
+				if (typeof change_doc === "function") {
+					change_doc();
+				}
+			});
+		});
+	}
+
+	// set datetime field inside table elements
+	if (field_types.contains("datetime")) {
+		$.each($("table > tbody > tr").find(".datetimepicker"), function(idx, element) {
+			$(element).datetimepicker({
+				icons: {
+					time: 'fa fa-clock-o',
+					date: 'fa fa-calendar',
+					up: 'fa fa-chevron-up',
+					down: 'fa fa-chevron-down',
+					previous: 'fa fa-chevron-left',
+					next: 'fa fa-chevron-right',
+					today: 'fa fa-crosshairs',
+					clear: 'fa fa-trash',
+					close: 'fa fa-times'
+				},
+				format: 'DD-MM-YYYY hh:mm A',
+				allowInputToggle: true,
+			}).on('dp.change', function(ev) {
 				if (typeof origin.data[table_name] !== "undefined") {
 					var doc_records = origin.data[table_name].length;
 				}

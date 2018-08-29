@@ -15,7 +15,7 @@
                 <li class="dropdown user user-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         @if (auth()->user()->avatar)
-                            <img alt="{{ auth()->user()->full_name }}" class="user-image" src="{{ url(auth()->user()->avatar) }}" title="{{ auth()->user()->full_name }}" />
+                            <img alt="{{ auth()->user()->full_name }}" class="user-image" src="{{ getImage(auth()->user()->avatar, 25, 25) }}" title="{{ auth()->user()->full_name }}" />
                         @else
                             <img class="user-image default" />
                         @endif
@@ -24,7 +24,7 @@
                     <ul class="dropdown-menu">
                         <li class="user-header">
                             @if (auth()->user()->avatar)
-                                <img alt="{{ auth()->user()->full_name }}" class="img-circle" src="{{ url(auth()->user()->avatar) }}" title="{{ auth()->user()->full_name }}" />
+                                <img alt="{{ auth()->user()->full_name }}" class="img-circle" src="{{ getImage(auth()->user()->avatar, 90, 90) }}" title="{{ auth()->user()->full_name }}" />
                             @else
                                 <img class="img-circle default" />
                             @endif

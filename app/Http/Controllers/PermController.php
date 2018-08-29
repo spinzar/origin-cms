@@ -33,12 +33,14 @@ trait PermController
 
         $this->role_modules_based_on_perm = [
             'Administrator' => [
+                'Show' => array_values(array_diff($this->modules, ['Module'])), 
                 'Read' => array_values(array_diff($this->modules, ['Module'])), 
                 'Create' => array_values(array_diff($this->modules, ['Module'])), 
                 'Update' => array_values(array_diff($this->modules, ['Module'])), 
                 'Delete' => array_values(array_diff($this->modules, ['Module']))
             ],
             'Guest' => [
+                'Show' => ['User'], 
                 'Read' => ['User'],
                 'Update' => ['User']
             ],

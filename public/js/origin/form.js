@@ -57,48 +57,7 @@ $( document ).ready(function() {
 	}
 
 	if (disable_fields) {
-		$form_elements = $("form").find("input, select, textarea");
-
-		$.each($form_elements, function(index, element) {
-			var ele_type = $(element).attr("type");
-
-			if (!["hidden", "file"].contains(ele_type)) {
-				var new_control = '';
-
-				if (ele_type == "checkbox") {
-					if ($(element).is(":checked")) {
-						new_control = '<i class="fa fa-check-square-o"></i>';
-					}
-					else {
-						new_control = '<i class="fa fa-square-o"></i>';
-					}
-				}
-				else {
-					var ele_val = $(element).val();
-
-					if ($(element).attr("name") == "is_active") {
-						ele_val = parseInt(ele_val) ? "Yes" : "No";
-					}
-
-					new_control = '<p class="form-control-static origin-static">' + ele_val + '</p>';
-				}
-
-				$(new_control).insertBefore($(element));
-			}
-
-			if ($(element).attr("type") == "file") {
-				$(element).closest('.btn').remove();
-			}
-
-			$(element).remove();
-		});
-
-		// hide remove row & add new row buttons from child tables
-		$.each($('table'), function(idx, tbl) {
-			$(tbl).find('th.remove').remove();
-			$(tbl).find('.remove-row').closest('td').remove();
-			$(tbl).find('.new-row').closest('tr').remove();
-		});
+		make_fields_readable();
 	}
 
 	// validate forms for mandatory fields
@@ -188,6 +147,52 @@ function remove_mandatory_highlight(mandatory_fields) {
 			$($parent_div).addClass("has-error");
 			$(this).addClass("error");
 		}
+	});
+}
+
+// make all fields readable
+function make_fields_readable() {
+	$form_elements = $("form").find("input, select, textarea");
+
+	$.each($form_elements, function(index, element) {
+		var ele_type = $(element).attr("type");
+
+		if (!["hidden", "file"].contains(ele_type)) {
+			var new_control = '';
+
+			if (ele_type == "checkbox") {
+				if ($(element).is(":checked")) {
+					new_control = '<i class="fa fa-check-square-o"></i>';
+				}
+				else {
+					new_control = '<i class="fa fa-square-o"></i>';
+				}
+			}
+			else {
+				var ele_val = $(element).val();
+
+				if ($(element).attr("name") == "is_active") {
+					ele_val = parseInt(ele_val) ? "Yes" : "No";
+				}
+
+				new_control = '<p class="form-control-static origin-static">' + ele_val + '</p>';
+			}
+
+			$(new_control).insertBefore($(element));
+		}
+
+		if ($(element).attr("type") == "file") {
+			$(element).closest('.btn').remove();
+		}
+
+		$(element).remove();
+	});
+
+	// hide remove row & add new row buttons from child tables
+	$.each($('table'), function(idx, tbl) {
+		$(tbl).find('th.remove').remove();
+		$(tbl).find('.remove-row').closest('td').remove();
+		$(tbl).find('.new-row').closest('tr').remove();
 	});
 }
 

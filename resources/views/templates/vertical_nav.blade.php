@@ -3,7 +3,7 @@
         <div class="user-panel">
             <div class="pull-left image">
                 @if (auth()->user()->avatar)
-                    <img alt="{{ auth()->user()->full_name }}" class="img-circle" src="{{ url(auth()->user()->avatar) }}" title="{{ auth()->user()->full_name }}" />
+                    <img alt="{{ auth()->user()->full_name }}" class="img-circle" src="{{ getImage(auth()->user()->avatar, 45, 45) }}" title="{{ auth()->user()->full_name }}" />
                 @else
                     <span class="default-avatar">
                         <i class="fa fa-user fa-lg"></i>
