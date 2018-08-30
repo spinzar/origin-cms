@@ -140,7 +140,19 @@ function add_row(table, idx, action) {
 					<select class="form-control input-sm" name="' + table_name + '[' + (idx - 1) + '][' + field_name + ']">';
 
 				$.each($(heads).data("options").split(","), function(index, option) {
-					row += '<option value="' + option + '">' + option + '</option>';
+					option = trim(option);
+					option = option.split(":");
+
+					if (option.length == 2) {
+						var option_value = option[1];
+						var option_label = option[0];
+					}
+					else {
+						var option_value = option[0];
+						var option_label = option[0];
+					}
+
+					row += '<option value="' + option_value + '">' + option_label + '</option>';
 				});
 
 				row += '</select></td>';
@@ -342,11 +354,23 @@ function add_new_rows(table_name, records) {
 						<select class="form-control input-sm" name="' + table_name + '[' + idx + '][' + field_name + ']">';
 
 					$.each($(heads).data("options").split(","), function(index, option) {
-						if (option == value[field_name]) {
-							rows += '<option value="' + option + '" default selected>' + option + '</option>';
+						option = trim(option);
+						option = option.split(":");
+
+						if (option.length == 2) {
+							var option_value = option[1];
+							var option_label = option[0];
 						}
 						else {
-							rows += '<option value="' + option + '">' + option + '</option>';
+							var option_value = option[0];
+							var option_label = option[0];
+						}
+
+						if (option_value == value[field_name]) {
+							rows += '<option value="' + option_value + '" default selected>' + option_label + '</option>';
+						}
+						else {
+							rows += '<option value="' + option_value + '">' + option_label + '</option>';
 						}
 					});
 
