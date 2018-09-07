@@ -6,6 +6,7 @@ use DB;
 use Cache;
 use Session;
 use App;
+use File;
 use App\Http\Controllers\CommonController;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
@@ -87,21 +88,14 @@ class ReportController extends Controller
     }
 
     // download report in xls, xlsx, csv formats
-    public function downloadReport($report_name, $columns, $rows, $format, $suffix = null, $action = null, $custom_rows = null)
+    public function downloadReport($report_name, $columns, $rows, $format, $action = null)
     {
         if ($format) {
             if (!in_array($format, ['xls', 'xlsx', 'csv'])) {
-                $format = 'xls';
+                $format = 'xlsx';
             }
         } else {
-            $format = 'xls';
-        }
-
-        // file name for download
-        if ($suffix) {
-            $filename = $report_name . "-" . date('Y-m-d H:i:s') . "-" . $suffix;
-        } else {
-            $filename = $report_name . "-" . date('Y-m-d H:i:s');
+            $format = 'xlsx';
         }
 
         // remove row property if not included in columns
@@ -113,16 +107,18 @@ class ReportController extends Controller
             }
         }
 
-        $data_to_export['sheets'][] = [
+        $filename = $report_name . "-" . date('Y-m-d H:i:s');
+        $images_found = false;
+        $export_data['sheets'][] = [
             'header' => $columns,
-            'sheet_title' => $report_name,
-            'details' => $rows
+            'title' => $report_name,
+            'rows' => $rows
         ];
 
-        $report = Excel::create($filename, function($excel) use($data_to_export, $custom_rows) {
-            foreach($data_to_export['sheets'] as $data_sheet) {
-                $excel->sheet($data_sheet['sheet_title'], function($sheet) use($data_sheet, $custom_rows) {
-                    $column_header = $data_sheet['header'];
+        $report = Excel::create($filename, function($excel) use($export_data, $format, &$images_found) {
+            foreach($export_data['sheets'] as $sheet_data) {
+                $excel->sheet($sheet_data['title'], function($sheet) use($sheet_data, $format, &$images_found) {
+                    $column_header = $sheet_data['header'];
 
                     foreach ($column_header as $key => $value) {
                         $column_header[$key] = awesome_case($column_header[$key]);
@@ -133,40 +129,61 @@ class ReportController extends Controller
                     }
 
                     $data = [];
+                    $cell_counter = 2;
                     array_push($data, $column_header);
 
-                    foreach($data_sheet['details'] as $excel_row) {
+                    foreach($sheet_data['rows'] as $idx => $excel_row) {
+                        $cell_no = 'A' . $cell_counter;
+
+                        foreach ($excel_row as $key => $value) {
+                            if (in_array($key, ['image', 'avatar']) && $value && $format != "csv") {
+                                $images_found = true;
+                                $im = imagecreatefromstring(file_get_contents(getImage($value, 100, 100, 95, 0, 'b')));
+                                $img_path = public_path('/uploads/excel-download-img-' . $idx . '.jpg');
+
+                                if ($im !== false) {
+                                    header('Content-Type: image/jpeg');
+                                    imagejpeg($im, $img_path);
+                                    imagedestroy($im);
+
+                                    $objDrawing = new \PHPExcel_Worksheet_Drawing;
+                                    $objDrawing->setPath($img_path);
+                                    $objDrawing->setCoordinates($cell_no);
+                                    $objDrawing->setWorksheet($sheet);
+
+                                    $sheet->setWidth('A', 10.8);
+                                    $sheet->setSize(array(
+                                        $cell_no => array(
+                                            'width'     => 10.8,
+                                            'height'    => 76
+                                        )
+                                    ));
+                                }
+
+                                $excel_row->$key = '';
+                            }
+                        }
+
                         array_push($data, (array) $excel_row);
-                    }
-
-                    // Add custom rows to file
-                    if ($custom_rows) {
-                        if (isset($custom_rows['after_line']) && $custom_rows['after_line']) {
-                            for ($i = 0; $i < $custom_rows['after_line']; $i++) { 
-                                array_push($data, []);
-                            }
-                        }
-
-                        if (isset($custom_rows['rows']) && $custom_rows['rows']) {
-                            foreach ($custom_rows['rows'] as $key => $value) {
-                                array_push($data, array($key, $value));
-                            }
-                        }
+                        $cell_counter++;
                     }
 
                     $sheet->fromArray($data, null, 'A1', false, false);
+                    $sheet->freezeFirstRow();
                 });
             }
         });
 
-        if ($action) {
-            if ($action == "store") {
-                return $report->store($format, false, true);
+        if ($action && $action == "store") {
+            return $report->store($format, false, true);
+        } else {
+            if ($images_found) {
+                $report = $report->store($format, false, true);
+                File::delete(File::glob(public_path('/uploads/excel-download-img-*')));
+                return response()->download($report['full'])->deleteFileAfterSend(true);
             } else {
                 $report->download($format);
             }
-        } else {
-            $report->download($format);
         }
     }
 }
