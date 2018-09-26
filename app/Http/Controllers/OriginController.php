@@ -33,7 +33,7 @@ class OriginController extends Controller
         try {
             $this->module = $this->setModule($slug);
         } catch(Exception $e) {
-            if ($request->ajax()) {
+            if ($request->is('api/*')) {
                 return response()->json([
                     'status_code' => 500,
                     'status' => 'Internal Server Error',
@@ -66,7 +66,7 @@ class OriginController extends Controller
         try {
             $this->module = $this->setModule($slug);
         } catch(Exception $e) {
-            if ($request->ajax()) {
+            if ($request->is('api/*')) {
                 return response()->json([
                     'status_code' => 500,
                     'status' => 'Internal Server Error',
@@ -106,7 +106,7 @@ class OriginController extends Controller
         try {
             $this->module = $this->setModule($slug);
         } catch(Exception $e) {
-            if ($request->ajax()) {
+            if ($request->is('api/*')) {
                 return response()->json([
                     'status_code' => 500,
                     'status' => 'Internal Server Error',
@@ -124,7 +124,7 @@ class OriginController extends Controller
             try {
                 call_user_func(array($controller_file, 'beforeSave'), $request);
             } catch(Exception $e) {
-                if ($request->ajax()) {
+                if ($request->is('api/*')) {
                     return response()->json([
                         'status_code' => 500,
                         'status' => 'Internal Server Error',
@@ -163,7 +163,7 @@ class OriginController extends Controller
         try {
             $this->module = $this->setModule($slug);
         } catch(Exception $e) {
-            if ($request->ajax()) {
+            if ($request->is('api/*')) {
                 return response()->json([
                     'status_code' => 500,
                     'status' => 'Internal Server Error',
@@ -181,7 +181,7 @@ class OriginController extends Controller
             try {
                 call_user_func(array($controller_file, 'beforeDelete'), $this->module['link_field_value']);
             } catch(Exception $e) {
-               if ($request->ajax()) {
+                if ($request->is('api/*')) {
                     return response()->json([
                         'status_code' => 500,
                         'status' => 'Internal Server Error',
